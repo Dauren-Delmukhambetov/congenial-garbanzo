@@ -43,11 +43,19 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: ./gradlew build sonarqube --info
 
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+      - uses: aws-actions/setup-sam@v2
+      - run: sam validate --template-file sam-template.yml
+
   deploy:
     name: Deploy serverless app to AWS
     runs-on: ubuntu-latest
     if: ${{ github.ref == 'refs/heads/master' }}
-    needs: build
+    needs: [build, validate]
 
     steps:
       # Configuring AWS CLI
