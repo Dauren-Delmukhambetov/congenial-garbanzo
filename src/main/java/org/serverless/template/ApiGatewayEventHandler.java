@@ -7,12 +7,19 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Map;
+
 import static java.util.Collections.singletonMap;
 
 @RequiredArgsConstructor
 public abstract class ApiGatewayEventHandler<T, R> extends BaseHandler<T, R, APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
-    protected final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    protected final Gson gson = new GsonBuilder()
+            .setPrettyPrinting()
+            .disableHtmlEscaping()
+            .create();
+
+    protected final Map<String, String> headers = singletonMap("Content-Type", "application/json");
     protected final Class<T> inputType;
 
     @Override
@@ -27,13 +34,19 @@ public abstract class ApiGatewayEventHandler<T, R> extends BaseHandler<T, R, API
 
             return new APIGatewayProxyResponseEvent()
                     .withStatusCode(200)
-                    .withHeaders(singletonMap("Content-Type", "application/json"))
+                    .withHeaders(headers)
                     .withBody(response);
+        } catch (ClientException e) {
+            log(context, "Client exception occurred while processing request %s: %s", input.getRequestContext().getRequestId(), e.getMessage());
+            return new APIGatewayProxyResponseEvent()
+                    .withStatusCode(e.getStatusCode())
+                    .withHeaders(headers)
+                    .withBody(e.getMessage());
         } catch (Exception e) {
             log(context, "Error occurred while processing request %s: %s", input.getRequestContext().getRequestId(), e.getMessage());
             return new APIGatewayProxyResponseEvent()
                     .withStatusCode(500)
-                    .withHeaders(singletonMap("Content-Type", "application/json"))
+                    .withHeaders(headers)
                     .withBody("Error occurred while processing request: " + e.getMessage());
         }
     }

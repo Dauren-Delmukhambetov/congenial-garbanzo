@@ -1,0 +1,94 @@
+
+name: Java CI/CD
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    name: Build with Gradle
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - name: Set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'adopt'
+          java-version: 11
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v3.0.4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v3.0.4
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
+          restore-keys: ${{ runner.os }}-gradle
+
+      - name: Build and analyze
+        id: build-and-analyse
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: ./gradlew build sonarqube --info
+
+  deploy:
+    name: Deploy serverless app to AWS
+    runs-on: ubuntu-latest
+    if: ${{ github.ref == 'refs/heads/master' }}
+    needs: build
+
+    steps:
+      # Configuring AWS CLI
+      - name: Display AWS CLI version
+        run: aws --version
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+          aws-region: us-east-1
+
+      # Packaging the app
+      - name: Check out the current branch
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - name: Build zip
+        id: build-zip
+        run: ./gradlew buildZip --info
+      - name: Get app version
+        id: get-app-version
+        run: |
+          cd build/distributions
+          version="$(ls | awk -F".zip" '{print $1}' | awk -F"-" '{print $NF}')"
+          echo "APP_VERSION=$version" >> $GITHUB_ENV
+
+      # Deploying the app to AWS
+      - name: Package serverless app
+        env:
+          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+        run: |
+          aws cloudformation package \
+              --template-file sam-template.yml \
+              --s3-bucket $AWS_S3_BUCKET \
+              --s3-prefix $APP_VERSION \
+              --output-template-file out.yml
+
+      - name: Deploy serverless app
+        run: |
+          aws cloudformation deploy \
+              --template-file out.yml \
+              --stack-name data-masker-api \
+              --capabilities CAPABILITY_IAM
