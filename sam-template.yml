@@ -1,39 +1,32 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::Serverless-2016-10-31'
 Resources:
-  # Change to your API names below
-  TemplateApi:
+  BookParserApi:
     Type: 'AWS::Serverless::Api'
     Properties:
       StageName: dev
       Models:
-        # Change to your API models below
-        Request:
+        BookParsingRequest:
           type: object
           required:
-            - data
+            - url
           properties:
-            data:
+            url:
               type: string
-  # Change to your function names below
-  TemplateLambdaFunction:
+  BookParserLambdaFunction:
     Type: 'AWS::Serverless::Function'
     Properties:
       Runtime: java11
-      # Change to your class names below
-      Handler: org.serverless.template.TemplateHandler::handleRequest
-      # Change to your artifact names below
-      CodeUri: build/distributions/aws-serverless-app-template-0.1.0.zip
+      Handler: org.serverless.oqu.kerek.BookHandler::handleRequest
+      CodeUri: build/distributions/oqu-kerek-app-0.1.0.zip
       Events:
-        # Change to your API event names below
-        TemplateApiEvent:
+        BookParserApiEvent:
           Type: Api
           Properties:
-            # Change to your API path below
-            Path: /template
+            Path: /books
             Method: post
             RequestModel:
-              Model: Request
+              Model: BookParsingRequest
               Required: true
             RestApiId:
-              Ref: TemplateApi
+              Ref: BookParserApi
