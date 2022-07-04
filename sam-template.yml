@@ -29,7 +29,7 @@ Resources:
       MemorySize: 512
       Timeout: 300
       CodeUri: build/distributions/oqu-kerek-app-0.1.0.zip
-      Environments:
+      Environment:
         Variables:
           QUEUE_NAME: !Ref BookPagesUrlQueue
       Events:
