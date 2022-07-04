@@ -13,12 +13,25 @@ Resources:
           properties:
             url:
               type: string
+  BookPagesUrlQueue:
+    Type: 'AWS::SQS::Queue'
+    Properties:
+      ContentBasedDeduplication: true
+      DelaySeconds: 2
+      MessageRetentionPeriod: 14400 # 4 hours
+      QueueName: 'book-pages-url-queue'
+      ReceiveMessageWaitTimeSeconds: 10
   BookParserLambdaFunction:
     Type: 'AWS::Serverless::Function'
     Properties:
       Runtime: java11
       Handler: org.serverless.oqu.kerek.BookHandler::handleRequest
+      MemorySize: 512
+      Timeout: 300
       CodeUri: build/distributions/oqu-kerek-app-0.1.0.zip
+      Environments:
+        Variables:
+          QUEUE_NAME: !Ref BookPagesUrlQueue
       Events:
         BookParserApiEvent:
           Type: Api
