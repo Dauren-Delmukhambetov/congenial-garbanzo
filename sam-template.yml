@@ -16,7 +16,6 @@ Resources:
   BookPagesUrlQueue:
     Type: 'AWS::SQS::Queue'
     Properties:
-      ContentBasedDeduplication: true
       DelaySeconds: 2
       MessageRetentionPeriod: 14400 # 4 hours
       QueueName: 'book-pages-url-queue'
