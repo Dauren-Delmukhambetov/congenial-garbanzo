@@ -1,0 +1,39 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Resources:
+  # Change to your API names below
+  TemplateApi:
+    Type: 'AWS::Serverless::Api'
+    Properties:
+      StageName: dev
+      Models:
+        # Change to your API models below
+        Request:
+          type: object
+          required:
+            - data
+          properties:
+            data:
+              type: string
+  # Change to your function names below
+  TemplateLambdaFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Runtime: java11
+      # Change to your class names below
+      Handler: org.serverless.template.TemplateHandler::handleRequest
+      # Change to your artifact names below
+      CodeUri: build/distributions/aws-serverless-app-template-0.1.0.zip
+      Events:
+        # Change to your API event names below
+        TemplateApiEvent:
+          Type: Api
+          Properties:
+            # Change to your API path below
+            Path: /template
+            Method: post
+            RequestModel:
+              Model: Request
+              Required: true
+            RestApiId:
+              Ref: TemplateApi
