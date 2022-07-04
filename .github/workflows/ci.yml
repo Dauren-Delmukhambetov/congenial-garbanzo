@@ -90,5 +90,5 @@ jobs:
         run: |
           aws cloudformation deploy \
               --template-file out.yml \
-              --stack-name data-masker-api \
+              --stack-name oqu-kerek-api \
               --capabilities CAPABILITY_IAM
