@@ -46,7 +46,7 @@ class BookHandlerTest {
         final var actual = handler.handleRequest(apiGatewayProxyRequestEvent, new LambdaTestContext());
 
         assertEquals(404, actual.getStatusCode());
-        assertEquals("Pages URLs has not been found on the given URL", actual.getBody());
+        assertEquals("Pages URLs have not been found on the given URL", actual.getBody());
     }
 
 }
