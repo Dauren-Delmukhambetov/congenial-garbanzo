@@ -63,7 +63,7 @@ public class BookHandler extends ApiGatewayEventHandler<BookHandler.BookParsingR
                 .collect(toList());
     }
 
-    private final Integer SQS_BATCH_REQUEST_LIMIT = 10;
+    private static final Integer SQS_BATCH_REQUEST_LIMIT = 10;
 
     @Getter
     @RequiredArgsConstructor
