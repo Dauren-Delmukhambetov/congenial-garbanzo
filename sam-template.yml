@@ -31,6 +31,9 @@ Resources:
       Environment:
         Variables:
           QUEUE_NAME: !Ref BookPagesUrlQueue
+      Policies:
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt BookPagesUrlQueue.QueueName
       Events:
         BookParserApiEvent:
           Type: Api
