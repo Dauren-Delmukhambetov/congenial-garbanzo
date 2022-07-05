@@ -16,6 +16,7 @@ repositories {
 dependencies {
     implementation 'com.amazonaws:aws-lambda-java-core:1.2.1'
     implementation 'com.amazonaws:aws-lambda-java-events:3.11.0'
+    implementation 'com.amazonaws:aws-java-sdk-sqs:1.12.239'
     implementation 'com.google.code.gson:gson:2.9.0'
     implementation 'net.datafaker:datafaker:1.4.0'
     implementation 'org.jsoup:jsoup:1.14.3'
