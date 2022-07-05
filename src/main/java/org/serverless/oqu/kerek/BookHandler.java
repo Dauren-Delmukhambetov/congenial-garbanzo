@@ -8,14 +8,22 @@ import org.serverless.template.ApiGatewayEventHandler;
 import org.serverless.template.ClientException;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
+import static java.util.Map.Entry.comparingByKey;
+import static java.util.UUID.randomUUID;
+import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static org.serverless.oqu.kerek.HtmlParseUtils.parseBookPagesPath;
 
 public class BookHandler extends ApiGatewayEventHandler<BookHandler.BookParsingRequest, BookHandler.BookParsingResponse> {
 
-    public BookHandler() { super(BookHandler.BookParsingRequest.class);}
+    public BookHandler() {
+        super(BookHandler.BookParsingRequest.class);
+    }
 
     @Override
     protected BookParsingResponse doHandleRequest(BookParsingRequest input) {
@@ -32,15 +40,30 @@ public class BookHandler extends ApiGatewayEventHandler<BookHandler.BookParsingR
     private void sendMessagesToSqs(final List<String> pages) {
         initSqsClient();
         final var queueUrl = System.getenv("QUEUE_NAME");
-        final var entries = pages.stream()
-                .limit(25)
-                .map(pageUrl -> new SendMessageBatchRequestEntry(UUID.randomUUID().toString(), pageUrl))
-                .collect(toList());
-        SendMessageBatchRequest sqsBatchRequest = new SendMessageBatchRequest()
-                .withQueueUrl(queueUrl)
-                .withEntries(entries);
-        sqs.sendMessageBatch(sqsBatchRequest);
+
+        chuckList(pages, SQS_BATCH_REQUEST_LIMIT)
+                .forEach(urls -> {
+                            final var entries = urls.stream()
+                                    .map(pageUrl -> new SendMessageBatchRequestEntry(randomUUID().toString(), pageUrl))
+                                    .collect(toList());
+                            final var sqsBatchRequest = new SendMessageBatchRequest()
+                                    .withQueueUrl(queueUrl)
+                                    .withEntries(entries);
+                            sqs.sendMessageBatch(sqsBatchRequest);
+                        }
+                );
     }
+
+    private List<List<String>> chuckList(final List<String> pages, final Integer chunkSize) {
+        AtomicInteger index = new AtomicInteger(0);
+        return pages.stream().collect(groupingBy(x -> index.getAndIncrement() / chunkSize))
+                .entrySet().stream()
+                .sorted(comparingByKey())
+                .map(Map.Entry::getValue)
+                .collect(toList());
+    }
+
+    private final Integer SQS_BATCH_REQUEST_LIMIT = 10;
 
     @Getter
     @RequiredArgsConstructor
