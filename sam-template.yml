@@ -20,6 +20,7 @@ Resources:
       MessageRetentionPeriod: 14400 # in seconds, 4 hours
       QueueName: 'book-pages-url-queue'
       ReceiveMessageWaitTimeSeconds: 10
+      VisibilityTimeout: 300 # in seconds
   BooksBucket:
     Type: 'AWS::S3::Bucket'
     Properties:
