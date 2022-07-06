@@ -1,5 +1,6 @@
 package org.serverless.oqu.kerek;
 
+import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.sqs.model.SendMessageBatchRequest;
 import com.amazonaws.services.sqs.model.SendMessageBatchRequestEntry;
 import lombok.Getter;
@@ -9,9 +10,7 @@ import org.serverless.template.ClientException;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 import static java.util.Map.Entry.comparingByKey;
 import static java.util.UUID.randomUUID;
@@ -26,7 +25,7 @@ public class BookHandler extends ApiGatewayEventHandler<BookHandler.BookParsingR
     }
 
     @Override
-    protected BookParsingResponse doHandleRequest(BookParsingRequest input) {
+    protected BookParsingResponse doHandleRequest(final BookParsingRequest input, final Context context) {
 
         final var pages = parseBookPagesPath(input.url);
 

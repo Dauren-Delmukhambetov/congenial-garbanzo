@@ -17,9 +17,13 @@ Resources:
     Type: 'AWS::SQS::Queue'
     Properties:
       DelaySeconds: 2
-      MessageRetentionPeriod: 14400 # 4 hours
+      MessageRetentionPeriod: 14400 # in seconds, 4 hours
       QueueName: 'book-pages-url-queue'
       ReceiveMessageWaitTimeSeconds: 10
+  BooksBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: 'oqu-kerek-books'
   BookParserLambdaFunction:
     Type: 'AWS::Serverless::Function'
     Properties:
@@ -32,6 +36,7 @@ Resources:
         Variables:
           QUEUE_NAME: !Ref BookPagesUrlQueue
       Policies:
+        # Policy that allows Lambda function to send messages to the queue with a given name
         - SQSSendMessagePolicy:
             QueueName: !GetAtt BookPagesUrlQueue.QueueName
       Events:
@@ -45,3 +50,26 @@ Resources:
               Required: true
             RestApiId:
               Ref: BookParserApi
+
+  BookPageLoaderLambdaFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Runtime: java11
+      Handler: org.serverless.oqu.kerek.BookPageLoader::handleRequest
+      MemorySize: 512
+      Timeout: 300
+      CodeUri: build/distributions/oqu-kerek-app-0.1.0.zip
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref BooksBucket
+      Policies:
+        # Policy that allows Lambda function to write objects into an Amazon S3 bucket
+        - S3WritePolicy:
+            BucketName: !GetAtt BooksBucket.BucketName
+      Events:
+        BookPageUrlSqsEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt BookPagesUrlQueue.Arn
+            BatchSize: 2
+            MaximumBatchingWindowInSeconds: 60
