@@ -65,7 +65,7 @@ Resources:
       Policies:
         # Policy that allows Lambda function to write objects into an Amazon S3 bucket
         - S3WritePolicy:
-            BucketName: !GetAtt BooksBucket.BucketName
+            BucketName: !Ref BooksBucket
       Events:
         BookPageUrlSqsEvent:
           Type: SQS
