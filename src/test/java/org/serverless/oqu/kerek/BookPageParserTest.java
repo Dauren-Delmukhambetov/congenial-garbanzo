@@ -10,9 +10,9 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class BookHandlerTest {
+class BookPageParserTest {
 
-    private final BookHandler handler = new BookHandler();
+    private final BookPageParser handler = new BookPageParser();
     private final Gson gson = new GsonBuilder()
             .setPrettyPrinting()
             .disableHtmlEscaping()
@@ -20,7 +20,7 @@ class BookHandlerTest {
 
     @Test
     void shouldReturn404StatusCode() {
-        final var request = new BookHandler.BookParsingRequest("http://kazneb.kz/bookView/view/?brId=error&simple=true&lang=kk#");
+        final var request = new BookPageParser.BookParsingRequest("http://kazneb.kz/bookView/view/?brId=error&simple=true&lang=kk#");
         final var requestContext = new APIGatewayProxyRequestEvent.ProxyRequestContext()
                 .withRequestId(UUID.randomUUID().toString());
         final var apiGatewayProxyRequestEvent = new APIGatewayProxyRequestEvent()
