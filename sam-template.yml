@@ -29,7 +29,7 @@ Resources:
     Type: 'AWS::Serverless::Function'
     Properties:
       Runtime: java11
-      Handler: org.serverless.oqu.kerek.BookHandler::handleRequest
+      Handler: org.serverless.oqu.kerek.BookParser::handleRequest
       MemorySize: 512
       Timeout: 300
       CodeUri: build/distributions/oqu-kerek-app-0.1.0.zip

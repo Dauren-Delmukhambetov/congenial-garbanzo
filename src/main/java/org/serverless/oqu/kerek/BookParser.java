@@ -20,10 +20,10 @@ import static java.util.stream.Collectors.toList;
 import static org.serverless.oqu.kerek.HtmlParseUtils.parseBookPagesPath;
 import static org.serverless.oqu.kerek.URLUtils.extractQueryParamValue;
 
-public class BookPageParser extends ApiGatewayEventHandler<BookPageParser.BookParsingRequest, BookPageParser.BookParsingResponse> {
+public class BookParser extends ApiGatewayEventHandler<BookParser.BookParsingRequest, BookParser.BookParsingResponse> {
 
-    public BookPageParser() {
-        super(BookPageParser.BookParsingRequest.class);
+    public BookParser() {
+        super(BookParser.BookParsingRequest.class);
     }
 
     @Override
