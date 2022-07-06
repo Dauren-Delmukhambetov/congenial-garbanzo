@@ -1,6 +1,7 @@
 package org.serverless.oqu.kerek;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.sqs.model.MessageAttributeValue;
 import com.amazonaws.services.sqs.model.SendMessageBatchRequest;
 import com.amazonaws.services.sqs.model.SendMessageBatchRequestEntry;
 import lombok.Getter;
@@ -17,39 +18,49 @@ import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static org.serverless.oqu.kerek.HtmlParseUtils.parseBookPagesPath;
+import static org.serverless.oqu.kerek.URLUtils.extractQueryParamValue;
 
-public class BookHandler extends ApiGatewayEventHandler<BookHandler.BookParsingRequest, BookHandler.BookParsingResponse> {
+public class BookPageParser extends ApiGatewayEventHandler<BookPageParser.BookParsingRequest, BookPageParser.BookParsingResponse> {
 
-    public BookHandler() {
-        super(BookHandler.BookParsingRequest.class);
+    public BookPageParser() {
+        super(BookPageParser.BookParsingRequest.class);
     }
 
     @Override
     protected BookParsingResponse doHandleRequest(final BookParsingRequest input, final Context context) {
 
+        final var bookId = extractQueryParamValue(input.url, "brId");
         final var pages = parseBookPagesPath(input.url);
 
         if (pages.isEmpty()) throw new ClientException(404, "Pages URLs have not been found on the given URL");
 
-        sendMessagesToSqs(pages);
+        sendMessagesToSqs(pages, bookId);
 
         return new BookParsingResponse(pages.stream().limit(10).collect(toList()));
     }
 
-    private void sendMessagesToSqs(final List<String> pages) {
+    private void sendMessagesToSqs(final List<String> pages, final String bookId) {
         initSqsClient();
         final var queueUrl = System.getenv("QUEUE_NAME");
 
         chuckList(pages, SQS_BATCH_REQUEST_LIMIT)
                 .forEach(urls -> {
                             final var entries = urls.stream()
-                                    .map(pageUrl -> new SendMessageBatchRequestEntry(randomUUID().toString(), pageUrl))
+                                    .map(pageUrl -> buildSendMessageRequest(pageUrl, bookId))
                                     .collect(toList());
                             final var sqsBatchRequest = new SendMessageBatchRequest()
                                     .withQueueUrl(queueUrl)
                                     .withEntries(entries);
                             sqs.sendMessageBatch(sqsBatchRequest);
                         }
+                );
+    }
+
+    private SendMessageBatchRequestEntry buildSendMessageRequest(final String body, final String attribute) {
+        return new SendMessageBatchRequestEntry(randomUUID().toString(), body)
+                .addMessageAttributesEntry("book-id", new MessageAttributeValue()
+                        .withDataType(String.class.getSimpleName())
+                        .withStringValue(attribute)
                 );
     }
 
