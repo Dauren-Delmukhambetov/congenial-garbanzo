@@ -29,9 +29,9 @@ public abstract class ApiGatewayEventHandler<T, R> extends BaseHandler<T, R, API
             log(context, "Queue name from env vars is %s", System.getenv("QUEUE_NAME"));
 
             final var request = gson.fromJson(input.getBody(), inputType);
-            final var response = gson.toJson(doHandleRequest(request));
+            final var response = gson.toJson(doHandleRequest(request, context));
 
-            log(context, "Completing processing request %s with output: %s", input.getRequestContext().getRequestId(), response);
+            log(context, "Completed processing request %s with output: %s", input.getRequestContext().getRequestId(), response);
 
             return new APIGatewayProxyResponseEvent()
                     .withStatusCode(200)
