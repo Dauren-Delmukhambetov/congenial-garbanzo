@@ -24,7 +24,7 @@ Resources:
   BooksBucket:
     Type: 'AWS::S3::Bucket'
     Properties:
-      BucketName: 'oqu-kerek-books'
+      BucketName: !Sub "${AWS::StackName}-books"
   BookParserLambdaFunction:
     Type: 'AWS::Serverless::Function'
     Properties:
@@ -87,14 +87,14 @@ Resources:
         Variables:
           BUCKET_NAME: !Ref BooksBucket
       Policies:
-        # Policy that allows Lambda function to write objects into an Amazon S3 bucket
-        - S3WritePolicy:
-            BucketName: !Ref BooksBucket
+        # Policy that allows Lambda function to read, write, and delete objects in an Amazon S3 bucket
+        - S3CrudPolicy:
+            BucketName: !Sub "${AWS::StackName}-books"
       Events:
         BookLastPageUploadedS3Event:
           Type: S3
           Properties:
-            Bucket: 'oqu-kerek-books'
+            Bucket: !Ref BooksBucket
             Events: s3:ObjectCreated:*
             Filter:
               S3Key:
