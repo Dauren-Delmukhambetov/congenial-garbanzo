@@ -30,8 +30,9 @@ public final class HtmlParseUtils {
         Document bookPage;
 
         try {
-            bookPage = Jsoup.parse(new URL(url), 5000);
+            bookPage = Jsoup.parse(new URL(url), 30_000);
         } catch (IOException e) {
+            System.err.printf("Error occurred while trying to parse URL %s : %s%n", url, e.getMessage());
             return Collections.emptyList();
         }
 
