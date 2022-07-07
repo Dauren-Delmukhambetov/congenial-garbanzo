@@ -77,9 +77,10 @@ public class BookPagesAssembler extends S3EventHandler {
         try (final var stream = s3Client.getObject(bucketName, key).getObjectContent()) {
             return stream.readAllBytes();
         } catch (IOException e) {
+            System.err.printf("Error while trying to read object %s from bucket %s%n", key, bucketName);
             throw new RuntimeException(e);
         }
     }
 
-    private static Path LAMBDA_TMP_DIR = get("/tmp");
+    private static final Path LAMBDA_TMP_DIR = get("/tmp");
 }
