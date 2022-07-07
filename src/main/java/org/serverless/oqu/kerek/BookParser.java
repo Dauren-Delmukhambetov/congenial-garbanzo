@@ -94,7 +94,7 @@ public class BookParser extends ApiGatewayEventHandler<BookParser.BookParsingReq
             return new SendMessageBatchRequestEntry(randomUUID().toString(), url.toString())
                     .withMessageAttributes(messageAttributes);
         } catch (MalformedURLException e) {
-            System.out.printf("Error occurred while trying to parse URL %s : %s%n", pageUrl, e.getMessage());
+            System.err.printf("Error occurred while trying to parse URL %s : %s%n", pageUrl, e.getMessage());
         }
         return null;
     }
