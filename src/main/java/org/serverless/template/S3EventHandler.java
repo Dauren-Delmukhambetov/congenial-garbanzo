@@ -11,8 +11,8 @@ public abstract class S3EventHandler extends BaseHandler<S3EventNotification.S3E
         try {
             log(context, "Starting processing S3 event of size %d", input.getRecords().size());
 
-            for (final var record : input.getRecords()) {
-                doHandleRequest(record, context);
+            for (final var event : input.getRecords()) {
+                doHandleRequest(event, context);
             }
 
             log(context, "Completed processing S3 event of size %d", input.getRecords().size());
