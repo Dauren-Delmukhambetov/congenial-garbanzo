@@ -7,9 +7,7 @@ import org.serverless.template.SqsEventHandler;
 
 import java.net.URL;
 
-import static java.lang.String.format;
-import static org.apache.commons.io.FilenameUtils.getExtension;
-import static org.apache.commons.io.FilenameUtils.getName;
+import static com.amazonaws.util.StringUtils.isNullOrEmpty;
 
 public class BookPageLoader extends SqsEventHandler {
 
@@ -19,20 +17,26 @@ public class BookPageLoader extends SqsEventHandler {
            log(context, "Starting processing SQS message (ID = %s)", input.getMessageId());
            initS3Client();
            final var bucketName = System.getenv("BUCKET_NAME");
-           final var pageUrl = new URL("https://kazneb.kz" + input.getBody().replace("&amp;", "&"));
-           log(context, "Page URL for downloading is %s", pageUrl.getPath());
-           final var bookId = input.getMessageAttributes().containsKey("book-id") ? input.getMessageAttributes().get("book-id").getStringValue() : "unknown";
-           final var filepath = format("%s/%s", bookId, getName(pageUrl.getPath()));
-           final var metadata = new ObjectMetadata();
-           metadata.setContentType("image/" + getExtension(pageUrl.getPath()));
+           final var filepath = getMessageAttributeOrDefault(input, "filepath", "");
+           final var contentType = getMessageAttributeOrDefault(input, "content-type", null);
 
-           try (final var bookPageImage = pageUrl.openStream()) {
-               s3Client.putObject(bucketName, filepath, bookPageImage, metadata);
+           try (final var bookPageImage = new URL(input.getBody()).openStream()) {
+               s3Client.putObject(bucketName, filepath, bookPageImage, buildObjectMetadata(contentType));
            }
            log(context, "Completed processing SQS message (ID = %s)", input.getMessageId());
        } catch (Exception e) {
            log(context, "Error occurred while processing request SQS message (ID = %s): %s", input.getMessageId(), e.getMessage());
        }
         return null;
+    }
+
+    private String getMessageAttributeOrDefault(final SQSEvent.SQSMessage input, final String attribute, final String defaultValue) {
+        return input.getMessageAttributes().containsKey(attribute) ? input.getMessageAttributes().get(attribute).getStringValue() : defaultValue;
+    }
+
+    private ObjectMetadata buildObjectMetadata(final String contentType) {
+        final var metadata = new ObjectMetadata();
+        if (!isNullOrEmpty(contentType)) metadata.setContentType(contentType);
+        return metadata;
     }
 }

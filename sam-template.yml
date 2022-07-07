@@ -72,5 +72,5 @@ Resources:
           Type: SQS
           Properties:
             Queue: !GetAtt BookPagesUrlQueue.Arn
-            BatchSize: 2
+            BatchSize: 10
             MaximumBatchingWindowInSeconds: 60

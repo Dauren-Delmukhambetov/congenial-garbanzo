@@ -9,14 +9,24 @@ import lombok.RequiredArgsConstructor;
 import org.serverless.template.ApiGatewayEventHandler;
 import org.serverless.template.ClientException;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.amazonaws.util.StringUtils.isNullOrEmpty;
+import static java.lang.String.format;
 import static java.util.Map.Entry.comparingByKey;
+import static java.util.Objects.requireNonNull;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.io.FilenameUtils.getExtension;
+import static org.apache.commons.io.FilenameUtils.getName;
+import static org.apache.commons.io.FilenameUtils.removeExtension;
 import static org.serverless.oqu.kerek.HtmlParseUtils.parseBookPagesPath;
 import static org.serverless.oqu.kerek.URLUtils.extractQueryParamValue;
 
@@ -42,26 +52,51 @@ public class BookParser extends ApiGatewayEventHandler<BookParser.BookParsingReq
     private void sendMessagesToSqs(final List<String> pages, final String bookId) {
         initSqsClient();
         final var queueUrl = System.getenv("QUEUE_NAME");
+        final var pagesWithoutLastOne = pages.subList(0, pages.size() - 1);
+        final var lastPage = pages.get(pages.size() - 1);
+        final var chuckedPages = chuckList(pagesWithoutLastOne, SQS_BATCH_REQUEST_LIMIT);
 
-        chuckList(pages, SQS_BATCH_REQUEST_LIMIT)
-                .forEach(urls -> {
-                            final var entries = urls.stream()
-                                    .map(pageUrl -> buildSendMessageRequest(pageUrl, bookId))
-                                    .collect(toList());
-                            final var sqsBatchRequest = new SendMessageBatchRequest()
-                                    .withQueueUrl(queueUrl)
-                                    .withEntries(entries);
-                            sqs.sendMessageBatch(sqsBatchRequest);
-                        }
-                );
+        for (final var urls : chuckedPages) {
+            final var entries = urls.stream()
+                    .map(pageUrl -> buildSendMessageRequest(pageUrl, bookId, null))
+                    .filter(Objects::nonNull)
+                    .collect(toList());
+            final var sqsBatchRequest = new SendMessageBatchRequest()
+                    .withQueueUrl(queueUrl)
+                    .withEntries(entries);
+            sqs.sendMessageBatch(sqsBatchRequest);
+        }
+
+        sqs.sendMessageBatch(
+                new SendMessageBatchRequest()
+                        .withQueueUrl(queueUrl)
+                        .withEntries(List.of(requireNonNull(buildSendMessageRequest(lastPage, bookId, "last"))))
+        );
     }
 
-    private SendMessageBatchRequestEntry buildSendMessageRequest(final String body, final String attribute) {
-        return new SendMessageBatchRequestEntry(randomUUID().toString(), body)
-                .addMessageAttributesEntry("book-id", new MessageAttributeValue()
-                        .withDataType(String.class.getSimpleName())
-                        .withStringValue(attribute)
-                );
+    private SendMessageBatchRequestEntry buildSendMessageRequest(final String pageUrl, final String bookId, final String filename) {
+        try {
+            final var url = new URL("https://kazneb.kz" + pageUrl.replace("&amp;", "&"));
+            final var filenameWithoutExtension = isNullOrEmpty(filename) ? removeExtension(getName(url.getPath())) : filename;
+            final var extension = getExtension(url.getPath());
+            final var attributes = Map.of(
+                    "filepath", format("%s/%s.%s", bookId, filenameWithoutExtension, extension),
+                    "content-type", format("image/%s", extension)
+            );
+            final var messageAttributes = attributes.entrySet()
+                    .stream()
+                    .collect(toMap(
+                            Map.Entry::getKey,
+                            e -> new MessageAttributeValue()
+                                    .withDataType(String.class.getSimpleName())
+                                    .withStringValue(e.getValue())
+                    ));
+            return new SendMessageBatchRequestEntry(randomUUID().toString(), url.toString())
+                    .withMessageAttributes(messageAttributes);
+        } catch (MalformedURLException e) {
+            System.out.printf("Error occurred while trying to parse URL %s : %s%n", pageUrl, e.getMessage());
+        }
+        return null;
     }
 
     private List<List<String>> chuckList(final List<String> pages, final Integer chunkSize) {
