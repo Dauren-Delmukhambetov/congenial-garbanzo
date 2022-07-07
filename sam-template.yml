@@ -74,3 +74,30 @@ Resources:
             Queue: !GetAtt BookPagesUrlQueue.Arn
             BatchSize: 10
             MaximumBatchingWindowInSeconds: 60
+
+  BookPagesAssemblerLambdaFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Runtime: java11
+      Handler: org.serverless.oqu.kerek.BookPagesAssembler::handleRequest
+      MemorySize: 512
+      Timeout: 300
+      CodeUri: build/distributions/oqu-kerek-app-0.1.0.zip
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref BooksBucket
+      Policies:
+        # Policy that allows Lambda function to write objects into an Amazon S3 bucket
+        - S3WritePolicy:
+            BucketName: !Ref BooksBucket
+      Events:
+        BookLastPageUploadedS3Event:
+          Type: S3
+          Properties:
+            Bucket: !Ref BooksBucket
+            Events: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: suffix
+                    Value: 'last.png'

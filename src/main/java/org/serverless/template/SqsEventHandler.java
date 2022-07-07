@@ -16,7 +16,7 @@ public abstract class SqsEventHandler extends BaseHandler<SQSEvent.SQSMessage, V
 
             log(context, "Completed processing SQS event of size %d", input.getRecords().size());
         } catch (Exception e) {
-            log(context, "Error occurred while processing SQS event %s: %s", "", e.getMessage());
+            log(context, "Error occurred while processing SQS event of size %d: %s", input.getRecords().size(), e.getMessage());
         }
         return null;
     }
