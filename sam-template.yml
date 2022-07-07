@@ -94,7 +94,7 @@ Resources:
         BookLastPageUploadedS3Event:
           Type: S3
           Properties:
-            Bucket: !Ref BooksBucket
+            Bucket: 'oqu-kerek-books'
             Events: s3:ObjectCreated:*
             Filter:
               S3Key:
