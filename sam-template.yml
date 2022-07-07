@@ -62,7 +62,7 @@ Resources:
       CodeUri: build/distributions/oqu-kerek-app-0.1.0.zip
       Environment:
         Variables:
-          BUCKET_NAME: !Ref BooksBucket
+          BUCKET_NAME: !Sub "${AWS::StackName}-books"
       Policies:
         # Policy that allows Lambda function to write objects into an Amazon S3 bucket
         - S3WritePolicy:
@@ -85,7 +85,7 @@ Resources:
       CodeUri: build/distributions/oqu-kerek-app-0.1.0.zip
       Environment:
         Variables:
-          BUCKET_NAME: !Ref BooksBucket
+          BUCKET_NAME: !Sub "${AWS::StackName}-books"
       Policies:
         # Policy that allows Lambda function to read, write, and delete objects in an Amazon S3 bucket
         - S3CrudPolicy:
