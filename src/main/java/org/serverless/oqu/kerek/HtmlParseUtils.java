@@ -24,7 +24,6 @@ public final class HtmlParseUtils {
     private static final String SCRIPT_REGEX = "^pages.push\\(\"(/\\w+){7}\\.png\\?time=\\d+&amp;key=\\w+\"\\);$";
     private static final Pattern SCRIPT_PATTERN = Pattern.compile(SCRIPT_REGEX, Pattern.CASE_INSENSITIVE);
     private static final Pattern PAGE_PATH_PATTERN = Pattern.compile("(/\\w+){7}\\.png\\?time=\\d+&amp;key=\\w+");
-    private static final Pattern PAGE_NAME_PATTERN = Pattern.compile("\\w+\\.png");
 
     public static List<String> parseBookPagesPath(String url) {
         Document bookPage;
@@ -55,17 +54,6 @@ public final class HtmlParseUtils {
         }
 
         Matcher matcher = PAGE_PATH_PATTERN.matcher(scriptLine);
-
-        return matcher.find() ? matcher.group() : null;
-    }
-
-    public static String parsePageImageName(String scriptLine) {
-
-        if (!PAGE_PATH_PATTERN.matcher(scriptLine).matches()) {
-            return null;
-        }
-
-        Matcher matcher = PAGE_NAME_PATTERN.matcher(scriptLine);
 
         return matcher.find() ? matcher.group() : null;
     }

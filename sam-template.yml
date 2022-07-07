@@ -30,7 +30,7 @@ Resources:
     Properties:
       Runtime: java11
       Handler: org.serverless.oqu.kerek.BookParser::handleRequest
-      MemorySize: 512
+      MemorySize: 1024
       Timeout: 300
       CodeUri: build/distributions/oqu-kerek-app-0.1.0.zip
       Environment:
@@ -57,7 +57,7 @@ Resources:
     Properties:
       Runtime: java11
       Handler: org.serverless.oqu.kerek.BookPageLoader::handleRequest
-      MemorySize: 512
+      MemorySize: 1024
       Timeout: 300
       CodeUri: build/distributions/oqu-kerek-app-0.1.0.zip
       Environment:
@@ -80,7 +80,7 @@ Resources:
     Properties:
       Runtime: java11
       Handler: org.serverless.oqu.kerek.BookPagesAssembler::handleRequest
-      MemorySize: 512
+      MemorySize: 1024
       Timeout: 300
       CodeUri: build/distributions/oqu-kerek-app-0.1.0.zip
       Environment:
@@ -101,3 +101,30 @@ Resources:
                 Rules:
                   - Name: suffix
                     Value: 'last.png'
+
+  BookPagesWiperLambdaFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Runtime: java11
+      Handler: org.serverless.oqu.kerek.BookPagesWiper::handleRequest
+      MemorySize: 1024
+      Timeout: 300
+      CodeUri: build/distributions/oqu-kerek-app-0.1.0.zip
+      Environment:
+        Variables:
+          BUCKET_NAME: !Sub "${AWS::StackName}-books"
+      Policies:
+        # Policy that allows Lambda function to read, write, and delete objects in an Amazon S3 bucket
+        - S3CrudPolicy:
+            BucketName: !Sub "${AWS::StackName}-books"
+      Events:
+        PdfDocumentUploadedS3Event:
+          Type: S3
+          Properties:
+            Bucket: !Ref BooksBucket
+            Events: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: suffix
+                    Value: '.pdf'
