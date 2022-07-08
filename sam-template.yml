@@ -21,6 +21,14 @@ Resources:
       QueueName: 'book-pages-url-queue'
       ReceiveMessageWaitTimeSeconds: 10
       VisibilityTimeout: 300 # in seconds
+  BookParsingRequestQueue:
+    Type: 'AWS::SQS:Queue'
+    Properties:
+      DelaySeconds: 2
+      MessageRetentionPeriod: 14400 # in seconds, 4 hours
+      QueueName: 'book-pages-url-queue'
+      ReceiveMessageWaitTimeSeconds: 10
+      VisibilityTimeout: 300 # in seconds
   BooksBucket:
     Type: 'AWS::S3::Bucket'
     Properties:
@@ -35,11 +43,11 @@ Resources:
       CodeUri: build/distributions/oqu-kerek-app-0.1.0.zip
       Environment:
         Variables:
-          QUEUE_NAME: !Ref BookPagesUrlQueue
+          QUEUE_NAME: !Ref BookParsingRequestQueue
       Policies:
         # Policy that allows Lambda function to send messages to the queue with a given name
         - SQSSendMessagePolicy:
-            QueueName: !GetAtt BookPagesUrlQueue.QueueName
+            QueueName: !GetAtt BookParsingRequestQueue.QueueName
       Events:
         BookParserApiEvent:
           Type: Api
@@ -52,11 +60,34 @@ Resources:
             RestApiId:
               Ref: BookParserApi
 
+  BookPagesURLFetcherLambdaFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Runtime: java11
+      Handler: org.serverless.oqu.kerek.BookPagesURLFetcher::handleRequest
+      MemorySize: 1024
+      Timeout: 300
+      CodeUri: build/distributions/oqu-kerek-app-0.1.0.zip
+      Environment:
+        Variables:
+          QUEUE_NAME: !Ref BookPagesUrlQueue
+      Policies:
+        # Policy that allows Lambda function to send messages to the queue with a given name
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt BookPagesUrlQueue.QueueName
+      Events:
+        BookParsingRequestSqsEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt BookParsingRequestQueue.Arn
+            BatchSize: 10
+            MaximumBatchingWindowInSeconds: 60
+
   BookPageLoaderLambdaFunction:
     Type: 'AWS::Serverless::Function'
     Properties:
       Runtime: java11
-      Handler: org.serverless.oqu.kerek.BookPageLoader::handleRequest
+      Handler: org.serverless.oqu.kerek.BookPagesLoader::handleRequest
       MemorySize: 1024
       Timeout: 300
       CodeUri: build/distributions/oqu-kerek-app-0.1.0.zip
