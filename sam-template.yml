@@ -18,7 +18,7 @@ Resources:
     Properties:
       DelaySeconds: 2
       MessageRetentionPeriod: 14400 # in seconds, 4 hours
-      QueueName: 'book-pages-url-queue'
+      QueueName: 'book-parsing-request-queue'
       ReceiveMessageWaitTimeSeconds: 10
       VisibilityTimeout: 300 # in seconds
   BooksBucket:
