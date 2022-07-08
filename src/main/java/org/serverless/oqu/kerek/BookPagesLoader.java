@@ -9,7 +9,7 @@ import java.net.URL;
 
 import static com.amazonaws.util.StringUtils.isNullOrEmpty;
 
-public class BookPageLoader extends SqsEventHandler {
+public class BookPagesLoader extends SqsEventHandler {
 
     @Override
     protected Void doHandleRequest(final SQSEvent.SQSMessage input, final Context context) {
