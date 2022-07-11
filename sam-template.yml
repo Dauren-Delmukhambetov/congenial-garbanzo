@@ -22,7 +22,7 @@ Resources:
       ReceiveMessageWaitTimeSeconds: 10
       VisibilityTimeout: 300 # in seconds
   BookParsingRequestQueue:
-    Type: 'AWS::SQS:Queue'
+    Type: 'AWS::SQS::Queue'
     Properties:
       DelaySeconds: 2
       MessageRetentionPeriod: 14400 # in seconds, 4 hours
