@@ -3,7 +3,6 @@ package org.serverless.oqu.kerek;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.models.s3.S3EventNotification;
 import org.serverless.template.S3EventHandler;
-import software.amazon.awssdk.services.s3.model.Delete;
 import software.amazon.awssdk.services.s3.model.DeleteObjectsRequest;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
