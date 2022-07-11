@@ -15,9 +15,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static com.amazonaws.util.StringUtils.isNullOrEmpty;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
+import static software.amazon.awssdk.utils.StringUtils.isBlank;
 
 
 public final class HtmlParseUtils {
@@ -65,9 +65,9 @@ public final class HtmlParseUtils {
         final var imageUrl = "https://kazneb.kz" + requireNonNull(bookPage.select(".viewing-pic img[src]").first()).attributes().get("src");
 
         return new BookParser.BookInfo(
-                isNullOrEmpty(title) ? null : title,
-                isNullOrEmpty(author) ? null : author,
-                isNullOrEmpty(imageUrl) ? null : imageUrl
+                isBlank(title) ? null : title,
+                isBlank(author) ? null : author,
+                isBlank(imageUrl) ? null : imageUrl
         );
     }
 
