@@ -36,7 +36,7 @@ public class BookPagesWiper extends S3EventHandler {
                     .collect(toList());
             final var deleteRequest = DeleteObjectsRequest.builder()
                     .bucket(bucketName)
-                    .delete(Delete.builder().objects(imageKeys).build())
+                    .delete(d -> d.objects(imageKeys))
                     .build();
 
             if (!isNullOrEmpty(imageKeys)) {
