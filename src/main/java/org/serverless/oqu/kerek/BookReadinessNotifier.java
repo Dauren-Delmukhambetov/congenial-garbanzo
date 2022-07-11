@@ -3,10 +3,8 @@ package org.serverless.oqu.kerek;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.models.s3.S3EventNotification;
 import org.serverless.template.S3EventHandler;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.ses.model.Body;
-import software.amazon.awssdk.services.ses.model.Content;
 import software.amazon.awssdk.services.ses.model.SendEmailRequest;
 
 import java.net.URL;
@@ -36,27 +34,21 @@ public class BookReadinessNotifier extends S3EventHandler {
                 .html(c -> c.data("<html> <head></head> <body> <a href=\"" + linkToFile.toExternalForm() + "\">Link to file</a> </body></html>"))
                 .build();
 
-        final var subject = Content.builder()
-                .data("Your book is ready to download")
-                .build();
-
         SendEmailRequest emailRequest = SendEmailRequest.builder()
                 .destination(d -> d.toAddresses("dauren_del@mail.ru"))
-                .message(m -> m.subject(subject).body(content))
+                .message(m -> m.subject(s -> s.data("Your book is ready to download")).body(content))
                 .source("dauren.del@gmail.com")
                 .build();
+
+        final var response = sesClient.sendEmail(emailRequest);
+
+        System.out.printf("Email with ID (%s) has been send to user", response.messageId());
     }
 
     private URL buildPresignedUrlToPdfFile(final String bucketName, final String key) {
-        final var getObjectRequest =
-                GetObjectRequest.builder()
-                        .bucket(bucketName)
-                        .key(key)
-                        .build();
-
         final var getObjectPresignRequest =  GetObjectPresignRequest.builder()
                 .signatureDuration(Duration.ofMinutes(10))
-                .getObjectRequest(getObjectRequest)
+                .getObjectRequest(r -> r.bucket(bucketName).key(key))
                 .build();
 
         final var presignedGetObjectRequest =

@@ -39,7 +39,7 @@ public abstract class BaseHandler<T, R, I, O> implements RequestHandler<I, O> {
                 .region(getCurrentRegion())
                 .credentialsProvider(ProfileCredentialsProvider.create())
                 .build();
-        System.out.printf("initS3Client took %d milliseconds to complete %n", System.currentTimeMillis() - start);
+        System.out.printf("initS3Presigner took %d milliseconds to complete %n", System.currentTimeMillis() - start);
     }
 
     protected void initSqsClient() {
@@ -49,7 +49,7 @@ public abstract class BaseHandler<T, R, I, O> implements RequestHandler<I, O> {
                 .region(getCurrentRegion())
                 .credentialsProvider(ProfileCredentialsProvider.create())
                 .build();
-        System.out.printf("initS3Client took %d milliseconds to complete %n", System.currentTimeMillis() - start);
+        System.out.printf("initSqsClient took %d milliseconds to complete %n", System.currentTimeMillis() - start);
     }
 
     protected void initSesClient() {
@@ -59,7 +59,7 @@ public abstract class BaseHandler<T, R, I, O> implements RequestHandler<I, O> {
                 .region(getCurrentRegion())
                 .credentialsProvider(ProfileCredentialsProvider.create())
                 .build();
-        System.out.printf("initS3Client took %d milliseconds to complete %n", System.currentTimeMillis() - start);
+        System.out.printf("initSesClient took %d milliseconds to complete %n", System.currentTimeMillis() - start);
     }
 
     protected Region getCurrentRegion() {
