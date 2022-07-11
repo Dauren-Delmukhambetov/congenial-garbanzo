@@ -2,14 +2,16 @@ package org.serverless.oqu.kerek;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.models.s3.S3EventNotification;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Image;
 import org.serverless.template.S3EventHandler;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Object;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -21,7 +23,10 @@ import static java.lang.String.format;
 import static java.nio.file.Files.createTempFile;
 import static java.nio.file.Files.newInputStream;
 import static java.nio.file.Paths.get;
+import static java.util.Map.of;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.io.IOUtils.toByteArray;
+import static software.amazon.awssdk.core.sync.RequestBody.fromBytes;
 
 public class BookPagesAssembler extends S3EventHandler {
 
@@ -46,10 +51,15 @@ public class BookPagesAssembler extends S3EventHandler {
     }
 
     private void assembleBookPages(final String bucketName, final String directory, final Path tempFile) throws FileNotFoundException {
-        final var objectKeys = s3Client.listObjectsV2(bucketName, directory)
-                .getObjectSummaries()
+        final var listRequest = ListObjectsV2Request.builder()
+                .bucket(bucketName)
+                .prefix(directory)
+                .build();
+
+        final var objectKeys = s3Client.listObjectsV2(listRequest)
+                .contents()
                 .stream()
-                .map(S3ObjectSummary::getKey)
+                .map(S3Object::key)
                 .collect(toList());
         try (
                 final var pdfDocument = new PdfDocument(new PdfWriter(tempFile.toFile()));
@@ -67,14 +77,22 @@ public class BookPagesAssembler extends S3EventHandler {
 
     private void uploadPdfFileToS3(final String bucketName, final String directory, final Path tempFile) throws IOException {
         try (final var pdfFileStream = newInputStream(tempFile)) {
-            final var metadata = new ObjectMetadata();
-            metadata.setContentType("application/pdf");
-            s3Client.putObject(bucketName, format("%s/%s.pdf", directory, UUID.randomUUID()), pdfFileStream, metadata);
+            final var putRequest = PutObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(format("%s/%s.pdf", directory, UUID.randomUUID()))
+                    .metadata(of("Content-Type", "application/pdf"))
+                    .build();
+            s3Client.putObject(putRequest, fromBytes(toByteArray(pdfFileStream)));
         }
     }
 
     private byte[] readObject(final String bucketName, final String key) {
-        try (final var stream = s3Client.getObject(bucketName, key).getObjectContent()) {
+        final var getRequest = GetObjectRequest.builder()
+                .bucket(bucketName)
+                .key(key)
+                .build();
+
+        try (final var stream = s3Client.getObjectAsBytes(getRequest).asInputStream()) {
             return stream.readAllBytes();
         } catch (IOException e) {
             System.err.printf("Error while trying to read object %s from bucket %s%n", key, bucketName);

@@ -4,6 +4,7 @@ import com.amazonaws.services.lambda.runtime.Context;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.serverless.template.ApiGatewayEventHandler;
+import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
 import static java.lang.String.format;
 import static org.serverless.oqu.kerek.HtmlParseUtils.parseBookInfo;
@@ -21,7 +22,12 @@ public class BookParser extends ApiGatewayEventHandler<BookParser.BookParsingReq
         final var bookId = extractQueryParamValue(input.url, "brId");
         final var queueUrl = System.getenv("QUEUE_NAME");
 
-        sqs.sendMessage(queueUrl, format("https://kazneb.kz/ru/bookView/view?brId=%s&simple=true", bookId));
+        sqs.sendMessage(
+                SendMessageRequest.builder()
+                        .queueUrl(queueUrl)
+                        .messageBody(format("https://kazneb.kz/ru/bookView/view?brId=%s&simple=true", bookId))
+                        .build()
+        );
 
         return parseBookInfo(format("https://kazneb.kz/ru/catalogue/view/%s", bookId));
     }

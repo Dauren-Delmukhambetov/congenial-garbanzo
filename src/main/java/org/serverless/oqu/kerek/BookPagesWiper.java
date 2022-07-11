@@ -2,12 +2,15 @@ package org.serverless.oqu.kerek;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.models.s3.S3EventNotification;
-import com.amazonaws.services.s3.model.DeleteObjectsRequest;
-import com.amazonaws.services.s3.model.S3ObjectSummary;
 import org.serverless.template.S3EventHandler;
+import software.amazon.awssdk.services.s3.model.Delete;
+import software.amazon.awssdk.services.s3.model.DeleteObjectsRequest;
+import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
+import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
+import software.amazon.awssdk.services.s3.model.S3Object;
 
-import static com.amazonaws.util.CollectionUtils.isNullOrEmpty;
 import static java.util.stream.Collectors.toList;
+import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 
 public class BookPagesWiper extends S3EventHandler {
 
@@ -19,17 +22,25 @@ public class BookPagesWiper extends S3EventHandler {
 
             final var bucketName = System.getenv("BUCKET_NAME");
             final var directory = input.getS3().getObject().getKey().split("/")[0];
+            final var listRequest = ListObjectsRequest.builder()
+                    .bucket(bucketName)
+                    .prefix(directory)
+                    .build();
 
-            final var imageKeys = s3Client.listObjectsV2(bucketName, directory)
-                    .getObjectSummaries()
+            final var imageKeys = s3Client.listObjects(listRequest)
+                    .contents()
                     .stream()
-                    .map(S3ObjectSummary::getKey)
+                    .map(S3Object::key)
                     .filter(key -> key.endsWith(".png"))
-                    .map(DeleteObjectsRequest.KeyVersion::new)
+                    .map(key -> ObjectIdentifier.builder().key(key).build())
                     .collect(toList());
+            final var deleteRequest = DeleteObjectsRequest.builder()
+                    .bucket(bucketName)
+                    .delete(Delete.builder().objects(imageKeys).build())
+                    .build();
 
             if (!isNullOrEmpty(imageKeys)) {
-                s3Client.deleteObjects(new DeleteObjectsRequest(bucketName).withKeys(imageKeys));
+                s3Client.deleteObjects(deleteRequest);
             }
 
             log(context, "Completed processing S3 Event notification record (Object Key = %s)", input.getS3().getObject().getKey());
