@@ -5,7 +5,7 @@ import com.amazonaws.services.lambda.runtime.events.models.s3.S3EventNotificatio
 import org.serverless.template.S3EventHandler;
 import software.amazon.awssdk.services.s3.model.Delete;
 import software.amazon.awssdk.services.s3.model.DeleteObjectsRequest;
-import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
@@ -22,12 +22,12 @@ public class BookPagesWiper extends S3EventHandler {
 
             final var bucketName = System.getenv("BUCKET_NAME");
             final var directory = input.getS3().getObject().getKey().split("/")[0];
-            final var listRequest = ListObjectsRequest.builder()
+            final var listRequest = ListObjectsV2Request.builder()
                     .bucket(bucketName)
                     .prefix(directory)
                     .build();
 
-            final var imageKeys = s3Client.listObjects(listRequest)
+            final var imageKeys = s3Client.listObjectsV2(listRequest)
                     .contents()
                     .stream()
                     .map(S3Object::key)
