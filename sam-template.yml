@@ -10,7 +10,7 @@ Resources:
         AllowHeaders: "''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Forwarded-For'"
         AllowOrigin: "'*'"
         MaxAge: "'600'"
-        AllowCredentials: true
+        AllowCredentials: false
       Models:
         BookParsingRequest:
           type: object
