@@ -174,7 +174,7 @@ Resources:
             BucketName: !Sub "${AWS::StackName}-books"
         # Policy that allows Lambda function to send email and verify identity
         - SESCrudPolicy:
-            IdentityName: 'dauren_del@mail.ru'
+            IdentityName: ['dauren_del@mail.ru', 'dauren.del@gmail.com']
       Events:
         PdfDocumentUploadedS3Event:
           Type: S3
