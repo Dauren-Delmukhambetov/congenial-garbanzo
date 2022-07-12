@@ -5,6 +5,12 @@ Resources:
     Type: 'AWS::Serverless::Api'
     Properties:
       StageName: dev
+      Cors:
+        AllowMethods: "'OPTIONS, POST, GET'"
+        AllowHeaders: "''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Forwarded-For'"
+        AllowOrigin: "'*'"
+        MaxAge: "'600'"
+        AllowCredentials: true
       Models:
         BookParsingRequest:
           type: object
