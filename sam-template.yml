@@ -177,9 +177,9 @@ Resources:
           Type: S3
           Properties:
             Bucket: !Ref BooksBucket
-            Events: s3:ObjectCreated:*
+            Events: s3:ObjectRemoved:*
             Filter:
               S3Key:
                 Rules:
                   - Name: suffix
-                    Value: '.pdf'
+                    Value: 'last.png'
