@@ -54,8 +54,6 @@ Resources:
         # Policy that allows Lambda function to send messages to the queue with a given name
         - SQSSendMessagePolicy:
             QueueName: !GetAtt BookParsingRequestQueue.QueueName
-        - S3ReadPolicy:
-            BucketName: !Sub "${AWS::StackName}-books"
       Events:
         BookParserApiEvent:
           Type: Api
@@ -84,6 +82,8 @@ Resources:
         # Policy that allows Lambda function to send messages to the queue with a given name
         - SQSSendMessagePolicy:
             QueueName: !GetAtt BookPagesUrlQueue.QueueName
+        - S3ReadPolicy:
+            BucketName: !Sub "${AWS::StackName}-books"
       Events:
         BookParsingRequestSqsEvent:
           Type: SQS
