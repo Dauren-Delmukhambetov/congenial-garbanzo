@@ -4,6 +4,7 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import org.serverless.template.ClientException;
 import org.serverless.template.SqsEventHandler;
+import software.amazon.awssdk.services.s3.model.S3Object;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequest;
 import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequestEntry;
@@ -36,6 +37,12 @@ public class BookPagesURLFetcher extends SqsEventHandler {
         try {
             log(context, "Starting processing SQS message (ID = %s)", input.getMessageId());
             final var bookId = extractQueryParamValue(input.getBody(), "brId");
+            final var bucketName = System.getenv("BOOKS_BUCKET_NAME");
+
+            if (bookExists(bucketName, bookId)) {
+                log(context, "Book with ID %s has already been loaded", bookId);
+            }
+
             final var pages = parseBookPagesUrls(input.getBody());
 
             if (pages.isEmpty()) throw new ClientException(404, "Pages URLs have not been found on the given URL");
@@ -111,6 +118,15 @@ public class BookPagesURLFetcher extends SqsEventHandler {
                 .sorted(comparingByKey())
                 .map(Map.Entry::getValue)
                 .collect(toList());
+    }
+
+    private boolean bookExists(final String bucketName, final String directory) {
+        initS3Client();
+        return s3Client.listObjectsV2(r -> r.bucket(bucketName).prefix(directory))
+                .contents()
+                .stream()
+                .map(S3Object::key)
+                .anyMatch(key -> key.endsWith(".pdf"));
     }
 
     private static final Integer SQS_BATCH_REQUEST_LIMIT = 10;

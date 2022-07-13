@@ -79,7 +79,7 @@ public class BookPagesAssembler extends S3EventHandler {
         try (final var pdfFileStream = newInputStream(tempFile)) {
             final var putRequest = PutObjectRequest.builder()
                     .bucket(bucketName)
-                    .key(format("%s/%s.pdf", directory, UUID.randomUUID()))
+                    .key(format("%s/%s.pdf", directory, "book"))
                     .metadata(of("Content-Type", "application/pdf"))
                     .build();
             s3Client.putObject(putRequest, fromBytes(toByteArray(pdfFileStream)));
