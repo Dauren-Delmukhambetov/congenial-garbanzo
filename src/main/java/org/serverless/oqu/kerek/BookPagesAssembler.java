@@ -16,7 +16,6 @@ import software.amazon.awssdk.services.s3.model.S3Object;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.UUID;
 
 import static com.itextpdf.io.image.ImageDataFactory.create;
 import static java.lang.String.format;
@@ -79,7 +78,7 @@ public class BookPagesAssembler extends S3EventHandler {
         try (final var pdfFileStream = newInputStream(tempFile)) {
             final var putRequest = PutObjectRequest.builder()
                     .bucket(bucketName)
-                    .key(format("%s/%s.pdf", directory, UUID.randomUUID()))
+                    .key(format("%s/%s.pdf", directory, "book"))
                     .metadata(of("Content-Type", "application/pdf"))
                     .build();
             s3Client.putObject(putRequest, fromBytes(toByteArray(pdfFileStream)));

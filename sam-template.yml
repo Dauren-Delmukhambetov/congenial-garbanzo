@@ -77,10 +77,13 @@ Resources:
       Environment:
         Variables:
           QUEUE_NAME: !Ref BookPagesUrlQueue
+          BOOKS_BUCKET_NAME: !Sub "${AWS::StackName}-books"
       Policies:
         # Policy that allows Lambda function to send messages to the queue with a given name
         - SQSSendMessagePolicy:
             QueueName: !GetAtt BookPagesUrlQueue.QueueName
+        - S3ReadPolicy:
+            BucketName: !Sub "${AWS::StackName}-books"
       Events:
         BookParsingRequestSqsEvent:
           Type: SQS
