@@ -16,7 +16,6 @@ import software.amazon.awssdk.services.s3.model.S3Object;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.UUID;
 
 import static com.itextpdf.io.image.ImageDataFactory.create;
 import static java.lang.String.format;
