@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.Map;
 
-import static java.util.Collections.singletonMap;
+import static java.util.Map.of;
 
 @RequiredArgsConstructor
 public abstract class ApiGatewayEventHandler<T, R> extends BaseHandler<T, R, APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
@@ -19,7 +19,10 @@ public abstract class ApiGatewayEventHandler<T, R> extends BaseHandler<T, R, API
             .disableHtmlEscaping()
             .create();
 
-    protected final Map<String, String> headers = singletonMap("Content-Type", "application/json");
+    protected final Map<String, String> headers = of(
+            "Content-Type", "application/json",
+            "Access-Control-Allow-Origin", "'*'"
+    );
     protected final Class<T> inputType;
 
     @Override
