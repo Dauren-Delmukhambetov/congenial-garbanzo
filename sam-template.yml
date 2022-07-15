@@ -60,14 +60,8 @@ Resources:
       SupportedIdentityProviders:
         - Google
 
-  BookPagesUrlQueue:
-    Type: 'AWS::SQS::Queue'
-    Properties:
-      DelaySeconds: 2
-      MessageRetentionPeriod: 14400 # in seconds, 4 hours
-      QueueName: 'book-pages-url-queue'
-      ReceiveMessageWaitTimeSeconds: 10
-      VisibilityTimeout: 300 # in seconds
+  # ---- Queues ----
+
   BookParsingRequestQueue:
     Type: 'AWS::SQS::Queue'
     Properties:
@@ -76,10 +70,24 @@ Resources:
       QueueName: 'book-parsing-request-queue'
       ReceiveMessageWaitTimeSeconds: 10
       VisibilityTimeout: 300 # in seconds
+  BookPagesUrlQueue:
+    Type: 'AWS::SQS::Queue'
+    Properties:
+      FifoQueue: true
+      DelaySeconds: 2
+      MessageRetentionPeriod: 14400 # in seconds, 4 hours
+      QueueName: 'book-pages-url-queue'
+      ReceiveMessageWaitTimeSeconds: 10
+      VisibilityTimeout: 300 # in seconds
+
+  # ---- Buckets ----
+
   BooksBucket:
     Type: 'AWS::S3::Bucket'
+    DeletionPolicy: Retain
     Properties:
       BucketName: !Sub "${AWS::StackName}-books"
+
 
   # ---- Functions ----
 
