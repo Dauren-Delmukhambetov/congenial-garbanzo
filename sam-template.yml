@@ -26,8 +26,9 @@ Resources:
       MfaConfiguration: 'OFF'
       UsernameConfiguration:
         CaseSensitive: false
-      UsernameAttributes:
-        - email
+    # Disabled since the property is unmodifiable
+    # UsernameAttributes:
+    #   - email
       Schema:
         - Name: email
           AttributeDataType: String
@@ -42,6 +43,22 @@ Resources:
     Properties:
       UserPoolId: !Ref ApiUserPool
       Domain: !Sub ${AWS::StackName}
+  ApiUserPoolClient:
+    Type: 'AWS::Cognito::UserPoolClient'
+    Properties:
+      UserPoolId: !Ref ApiUserPool
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthFlows:
+        - code
+      AllowedOAuthScopes:
+        - email
+        - openid
+        - profile
+      CallbackURLs:
+        - https://example.com
+      ClientName: !Sub "${AWS::StackName}-user-pool-web-app-client"
+      SupportedIdentityProviders:
+        - Google
 
   BookPagesUrlQueue:
     Type: 'AWS::SQS::Queue'
