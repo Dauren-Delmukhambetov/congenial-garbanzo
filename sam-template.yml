@@ -57,7 +57,7 @@ Resources:
     Properties:
       BucketName: !Sub "${AWS::StackName}-books"
 
-  ---- Functions ----
+  # ---- Functions ----
 
   BookParserLambdaFunction:
     Type: 'AWS::Serverless::Function'
