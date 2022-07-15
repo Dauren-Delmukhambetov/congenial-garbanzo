@@ -76,7 +76,7 @@ Resources:
       FifoQueue: true
       DelaySeconds: 2
       MessageRetentionPeriod: 14400 # in seconds, 4 hours
-      QueueName: 'book-pages-url-queue'
+      QueueName: 'book-pages-url-queue.fifo'
       ReceiveMessageWaitTimeSeconds: 10
       VisibilityTimeout: 300 # in seconds
 
