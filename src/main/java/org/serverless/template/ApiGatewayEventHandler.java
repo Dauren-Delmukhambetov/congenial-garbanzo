@@ -29,6 +29,9 @@ public abstract class ApiGatewayEventHandler<T, R> extends BaseHandler<T, R, API
     public APIGatewayProxyResponseEvent handleRequest(final APIGatewayProxyRequestEvent input, final Context context) {
         try {
             log(context, "Starting processing request %s with input: %s", input.getRequestContext().getRequestId(), input.getBody());
+            if (input.getRequestContext().getAuthorizer() != null) {
+                log(context, "Request processing behalf of %s", input.getRequestContext().getAuthorizer().get("jwt"));
+            }
             log(context, "Queue name from env vars is %s", System.getenv("QUEUE_NAME"));
 
             final var request = gson.fromJson(input.getBody(), inputType);
