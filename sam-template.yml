@@ -19,6 +19,23 @@ Resources:
           properties:
             url:
               type: string
+  ApiUserPool:
+    Type: 'AWS::Cognito::UserPool'
+    Properties:
+      UserPoolName: !Sub "${AWS::StackName}-user-pool"
+      MfaConfiguration: 'OFF'
+      UsernameConfiguration:
+        CaseSensitive: false
+      Schema:
+        - Name: email
+          AttributeDataType: String
+          Mutable: false
+          Required: true
+        - Name: name
+          AttributeDataType: String
+          Mutable: true
+          Required: true
+
   BookPagesUrlQueue:
     Type: 'AWS::SQS::Queue'
     Properties:
@@ -39,6 +56,9 @@ Resources:
     Type: 'AWS::S3::Bucket'
     Properties:
       BucketName: !Sub "${AWS::StackName}-books"
+
+  ---- Functions ----
+
   BookParserLambdaFunction:
     Type: 'AWS::Serverless::Function'
     Properties:
@@ -169,7 +189,7 @@ Resources:
                   - Name: suffix
                     Value: '.pdf'
 
-  BookReadinessNotifier:
+  BookReadinessNotifierLambdaFunction:
     Type: 'AWS::Serverless::Function'
     Properties:
       Runtime: java11
