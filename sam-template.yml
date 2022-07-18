@@ -192,7 +192,6 @@ Resources:
           Properties:
             Queue: !GetAtt BookPagesUrlQueue.Arn
             BatchSize: 10
-            MaximumBatchingWindowInSeconds: 60
 
   BookPagesAssemblerLambdaFunction:
     Type: 'AWS::Serverless::Function'
