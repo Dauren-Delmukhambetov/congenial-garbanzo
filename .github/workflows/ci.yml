@@ -108,5 +108,5 @@ jobs:
           aws cloudformation deploy \
               --template-file out.yml \
               --stack-name oqu-kerek-api \
-              --parameter-overrides GoogleClientID=$GOOGLE_CLIENT_ID,GoogleClientSecret=123 \
+              --parameter-overrides GoogleClientID=$GOOGLE_CLIENT_ID GoogleClientSecret=$GOOGLE_CLIENT_SECRET \
               --capabilities CAPABILITY_IAM
