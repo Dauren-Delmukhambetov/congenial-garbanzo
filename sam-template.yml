@@ -1,5 +1,14 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::Serverless-2016-10-31'
+
+Parameters:
+  GoogleClientID:
+    Type: String
+    Description: Client ID for Google auth client
+  GoogleClientSecret:
+    Type: String
+    NoEcho: true
+    Description: Client's secret for Google auth client
 Resources:
   BookParserApi:
     Type: 'AWS::Serverless::Api'
@@ -58,7 +67,25 @@ Resources:
         - https://example.com
       ClientName: !Sub "${AWS::StackName}-user-pool-web-app-client"
       SupportedIdentityProviders:
-        - Google
+        - !Ref ApiUserPoolGoogleIdentityProvider
+
+  ApiUserPoolGoogleIdentityProvider:
+    Type: 'AWS::Cognito::UserPoolIdentityProvider'
+    Properties:
+      UserPoolId: !Ref ApiUserPool
+      ProviderName: 'Google'
+      ProviderDetails:
+        client_id: !Ref GoogleClientID
+        client_secret: !Ref GoogleClientSecret
+        authorize_scopes: 'profile email openid'
+      ProviderType: 'Google'
+      AttributeMapping:
+        email: 'email'
+        family_name: 'family_name'
+        given_name: 'given_name'
+        name: 'name'
+        picture: 'picture'
+        username: 'sub'
 
   # ---- Queues ----
 
