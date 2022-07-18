@@ -101,8 +101,12 @@ jobs:
               --output-template-file out.yml
 
       - name: Deploy serverless app
+        env:
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
         run: |
           aws cloudformation deploy \
               --template-file out.yml \
               --stack-name oqu-kerek-api \
+              --parameter-overrides "GoogleClientID=$GOOGLE_CLIENT_ID,GoogleClientSecret=$GOOGLE_CLIENT_SECRET" \
               --capabilities CAPABILITY_IAM
