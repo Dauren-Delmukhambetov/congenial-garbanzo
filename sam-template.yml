@@ -20,6 +20,20 @@ Resources:
         AllowOrigin: "'*'"
         MaxAge: "'600'"
         AllowCredentials: false
+      Auth:
+        Authorizers:
+          CognitoWithGoogleSignInAuthorizer:
+            AuthorizationScope:
+              - email
+              - openid
+              - profile
+            UserPoolArn: !GetAtt ApiUserPool.Arn
+            Identity:
+              # Header: Authorization # (by default)
+              ValidationExpression: Bearer.*
+              ReauthorizeEvery: 300 # in seconds, max is 3600s = 1h
+        DefaultAuthorizer: CognitoWithGoogleSignInAuthorizer
+        AddDefaultAuthorizerToCorsPreflight: false
       Models:
         BookParsingRequest:
           type: object
@@ -35,9 +49,8 @@ Resources:
       MfaConfiguration: 'OFF'
       UsernameConfiguration:
         CaseSensitive: false
-    # Disabled since the property is unmodifiable
-    # UsernameAttributes:
-    #   - email
+      UsernameAttributes:
+        - email
       Schema:
         - Name: email
           AttributeDataType: String
