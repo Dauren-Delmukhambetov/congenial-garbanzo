@@ -30,7 +30,7 @@ public abstract class ApiGatewayEventHandler<T, R> extends BaseHandler<T, R, API
         try {
             log(context, "Starting processing request %s with input: %s", input.getRequestContext().getRequestId(), input.getBody());
             if (input.getRequestContext().getAuthorizer() != null) {
-                log(context, "Request processing behalf of %s", input.getRequestContext().getAuthorizer().get("jwt"));
+                log(context, "Request context is %s ", gson.toJson(input.getRequestContext()));
             }
             log(context, "Queue name from env vars is %s", System.getenv("QUEUE_NAME"));
 
