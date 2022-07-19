@@ -30,7 +30,6 @@ Resources:
             UserPoolArn: !GetAtt ApiUserPool.Arn
             Identity:
               # Header: Authorization # (by default)
-              ValidationExpression: Bearer.*
               ReauthorizeEvery: 300 # in seconds, max is 3600s = 1h
         DefaultAuthorizer: CognitoWithGoogleSignInAuthorizer
         AddDefaultAuthorizerToCorsPreflight: false

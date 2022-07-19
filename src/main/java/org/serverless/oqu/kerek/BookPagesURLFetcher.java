@@ -102,6 +102,7 @@ public class BookPagesURLFetcher extends SqsEventHandler {
                     ));
             return SendMessageBatchRequestEntry.builder()
                     .id(randomUUID().toString())
+                    .messageGroupId(bookId)
                     .messageBody(url.toString())
                     .messageAttributes(messageAttributes)
                     .build();
