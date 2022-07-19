@@ -113,6 +113,9 @@ Resources:
     Type: 'AWS::SQS::Queue'
     Properties:
       FifoQueue: true
+      ContentBasedDeduplication: true
+      DeduplicationScope: 'messageGroup'
+      FifoThroughputLimit: 'perMessageGroupId'
       DelaySeconds: 2
       MessageRetentionPeriod: 14400 # in seconds, 4 hours
       QueueName: 'book-pages-url-queue.fifo'
