@@ -8,9 +8,11 @@ import software.amazon.awssdk.services.s3.model.S3Object;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequest;
 import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequestEntry;
+import software.amazon.awssdk.utils.StringUtils;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -30,6 +32,7 @@ import static org.apache.commons.io.FilenameUtils.removeExtension;
 import static org.serverless.oqu.kerek.HtmlParseUtils.parseBookPagesUrls;
 import static org.serverless.oqu.kerek.URLUtils.extractQueryParamValue;
 import static software.amazon.awssdk.utils.StringUtils.isBlank;
+import static software.amazon.awssdk.utils.StringUtils.isNotBlank;
 
 public class BookPagesURLFetcher extends SqsEventHandler {
 
@@ -95,12 +98,12 @@ public class BookPagesURLFetcher extends SqsEventHandler {
             final var url = new URL("https://kazneb.kz" + pageUrl.replace("&amp;", "&"));
             final var filenameWithoutExtension = isBlank(filename) ? removeExtension(getName(url.getPath())) : filename;
             final var extension = getExtension(url.getPath());
-            final var attributes = Map.of(
-                    "filepath", format("%s/%s.%s", bookId, filenameWithoutExtension, extension),
-                    "content-type", format("image/%s", extension),
-                    "initiator.email", email,
-                    "initiator.name", name
-            );
+            final var attributes = new HashMap<String, String>();
+            attributes.put("filepath", format("%s/%s.%s", bookId, filenameWithoutExtension, extension));
+            attributes.put("content-type", format("image/%s", extension));
+            if (isNotBlank(email)) attributes.put("initiator.email", email);
+            if (isNotBlank(name)) attributes.put("initiator.name", name);
+
             final var messageAttributes = attributes.entrySet()
                     .stream()
                     .filter(e -> nonNull(e.getValue()))
