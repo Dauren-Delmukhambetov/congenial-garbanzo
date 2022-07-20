@@ -54,6 +54,7 @@ public class BookPagesURLFetcher extends SqsEventHandler {
             log(context, "Completed processing SQS message (ID = %s)", input.getMessageId());
         } catch (Exception e) {
             log(context, "Error occurred while processing request SQS message (ID = %s): %s", input.getMessageId(), e.getMessage());
+            e.printStackTrace();
         }
         return null;
     }
