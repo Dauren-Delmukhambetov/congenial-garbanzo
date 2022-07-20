@@ -16,6 +16,7 @@ import software.amazon.awssdk.services.s3.model.S3Object;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.stream.Collectors;
 
 import static com.itextpdf.io.image.ImageDataFactory.create;
 import static java.lang.String.format;
@@ -23,6 +24,7 @@ import static java.nio.file.Files.createTempFile;
 import static java.nio.file.Files.newInputStream;
 import static java.nio.file.Paths.get;
 import static java.util.Map.of;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.io.IOUtils.toByteArray;
 import static org.serverless.oqu.kerek.Constants.S3_OBJECT_INITIATOR_EMAIL_ATTR;
@@ -47,6 +49,7 @@ public class BookPagesAssembler extends S3EventHandler {
             log(context, "Completed processing S3 Event notification record (Object Key = %s)", input.getS3().getObject().getKey());
         } catch (Exception e) {
             log(context, "Error occurred while processing S3 Event notification record (Object Key = %s): %s", input.getS3().getObject().getKey(), e.getMessage());
+            e.printStackTrace();
         }
         return null;
     }
@@ -78,6 +81,7 @@ public class BookPagesAssembler extends S3EventHandler {
 
     private void uploadPdfFileToS3(final String bucketName, final String directory, final Path tempFile) throws IOException {
         final var headObject = s3Client.headObject(h -> h.bucket(bucketName).key(format("%s/last.png", directory)).build());
+        System.out.println("Last page image metadata: " + headObject.metadata().entrySet().stream().map(e -> format("%s - %s", e.getKey(), e.getValue())).collect(joining()));
         final var metadata = of(
                 "Content-Type", "application/pdf",
                 S3_OBJECT_INITIATOR_EMAIL_ATTR, headObject.metadata().get(S3_OBJECT_INITIATOR_EMAIL_ATTR),

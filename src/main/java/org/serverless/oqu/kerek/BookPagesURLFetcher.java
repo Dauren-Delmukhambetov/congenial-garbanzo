@@ -8,7 +8,6 @@ import software.amazon.awssdk.services.s3.model.S3Object;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequest;
 import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequestEntry;
-import software.amazon.awssdk.utils.StringUtils;
 
 import java.net.MalformedURLException;
 import java.net.URL;
