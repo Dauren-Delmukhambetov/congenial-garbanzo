@@ -16,9 +16,12 @@ import static org.serverless.oqu.kerek.URLUtils.extractQueryParamValue;
 
 public class BookParser extends ApiGatewayEventHandler<BookParser.BookParsingRequest, BookParser.BookInfo> {
 
+    static {
+        initSqsClient();
+    }
+
     public BookParser() {
         super(BookParser.BookParsingRequest.class);
-        initSqsClient();
     }
 
     @Override

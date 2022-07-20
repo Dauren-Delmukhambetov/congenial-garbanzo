@@ -13,11 +13,14 @@ import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 
 public class BookPagesWiper extends S3EventHandler {
 
+    static {
+        initS3Client();
+    }
+
     @Override
     protected Void doHandleRequest(S3EventNotification.S3EventNotificationRecord input, Context context) {
         try {
             log(context, "Starting processing S3 Event notification record (Object Key = %s)", input.getS3().getObject().getKey());
-            initS3Client();
 
             final var bucketName = System.getenv("BUCKET_NAME");
             final var directory = input.getS3().getObject().getKey().split("/")[0];

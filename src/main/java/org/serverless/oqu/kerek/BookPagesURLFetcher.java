@@ -35,6 +35,11 @@ import static software.amazon.awssdk.utils.StringUtils.isNotBlank;
 
 public class BookPagesURLFetcher extends SqsEventHandler {
 
+    static {
+        initS3Client();
+        initSqsClient();
+    }
+
     @Override
     protected Void doHandleRequest(SQSEvent.SQSMessage input, Context context) {
         try {
@@ -62,7 +67,6 @@ public class BookPagesURLFetcher extends SqsEventHandler {
     }
 
     private void sendMessagesToSqs(final List<String> pages, final String bookId, final String email, final String name) {
-        initSqsClient();
         final var queueUrl = System.getenv("QUEUE_NAME");
         final var pagesWithoutLastOne = pages.subList(0, pages.size() - 1);
         final var lastPage = pages.get(pages.size() - 1);
@@ -135,7 +139,6 @@ public class BookPagesURLFetcher extends SqsEventHandler {
     }
 
     private boolean bookExists(final String bucketName, final String directory) {
-        initS3Client();
         return s3Client.listObjectsV2(r -> r.bucket(bucketName).prefix(directory))
                 .contents()
                 .stream()

@@ -15,13 +15,16 @@ import static org.serverless.oqu.kerek.Constants.S3_OBJECT_INITIATOR_EMAIL_ATTR;
 
 public class BookReadinessNotifier extends S3EventHandler {
 
+    static {
+        initS3Client();
+        initS3Presigner();
+        initSesClient();
+    }
+
     @Override
     protected Void doHandleRequest(S3EventNotification.S3EventNotificationRecord input, Context context) {
         try {
             log(context, "Starting processing S3 Event notification record (Object Key = %s)", input.getS3().getObject().getKey());
-            initS3Client();
-            initS3Presigner();
-            initSesClient();
 
             final var bucketName = input.getS3().getBucket().getName();
             final var directory = input.getS3().getObject().getKey().split("/")[0];
