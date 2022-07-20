@@ -17,11 +17,14 @@ import static software.amazon.awssdk.utils.StringUtils.isBlank;
 
 public class BookPagesLoader extends SqsEventHandler {
 
+    static {
+        initS3Client();
+    }
+
     @Override
     protected Void doHandleRequest(final SQSEvent.SQSMessage input, final Context context) {
        try {
            log(context, "Starting processing SQS message (ID = %s)", input.getMessageId());
-           initS3Client();
            final var bucketName = System.getenv("BUCKET_NAME");
            final var filepath = getMessageAttributeOrDefault(input, "filepath", "");
            final var contentType = getMessageAttributeOrDefault(input, "content-type", null);
