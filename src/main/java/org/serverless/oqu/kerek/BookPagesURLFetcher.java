@@ -18,6 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.String.format;
 import static java.util.Map.Entry.comparingByKey;
+import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.groupingBy;
@@ -38,6 +39,8 @@ public class BookPagesURLFetcher extends SqsEventHandler {
             log(context, "Starting processing SQS message (ID = %s)", input.getMessageId());
             final var bookId = extractQueryParamValue(input.getBody(), "brId");
             final var bucketName = System.getenv("BOOKS_BUCKET_NAME");
+            final var initiatorEmail = getMessageAttributeOrDefault(input, "initiator.email", null);
+            final var initiatorName = getMessageAttributeOrDefault(input, "initiator.name", null);
 
             if (bookExists(bucketName, bookId)) {
                 log(context, "Book with ID %s has already been loaded", bookId);
@@ -47,7 +50,7 @@ public class BookPagesURLFetcher extends SqsEventHandler {
 
             if (pages.isEmpty()) throw new ClientException(404, "Pages URLs have not been found on the given URL");
 
-            sendMessagesToSqs(pages, bookId);
+            sendMessagesToSqs(pages, bookId, initiatorEmail, initiatorName);
             log(context, "Completed processing SQS message (ID = %s)", input.getMessageId());
         } catch (Exception e) {
             log(context, "Error occurred while processing request SQS message (ID = %s): %s", input.getMessageId(), e.getMessage());
@@ -55,7 +58,7 @@ public class BookPagesURLFetcher extends SqsEventHandler {
         return null;
     }
 
-    private void sendMessagesToSqs(final List<String> pages, final String bookId) {
+    private void sendMessagesToSqs(final List<String> pages, final String bookId, final String email, final String name) {
         initSqsClient();
         final var queueUrl = System.getenv("QUEUE_NAME");
         final var pagesWithoutLastOne = pages.subList(0, pages.size() - 1);
@@ -64,7 +67,7 @@ public class BookPagesURLFetcher extends SqsEventHandler {
 
         for (final var urls : chuckedPages) {
             final var entries = urls.stream()
-                    .map(pageUrl -> buildSendMessageRequest(pageUrl, bookId, null))
+                    .map(pageUrl -> buildSendMessageRequest(pageUrl, bookId))
                     .filter(Objects::nonNull)
                     .collect(toList());
             final var sqsBatchRequest = SendMessageBatchRequest.builder()
@@ -77,22 +80,29 @@ public class BookPagesURLFetcher extends SqsEventHandler {
         sqs.sendMessageBatch(
                 SendMessageBatchRequest.builder()
                         .queueUrl(queueUrl)
-                        .entries(List.of(requireNonNull(buildSendMessageRequest(lastPage, bookId, "last"))))
+                        .entries(List.of(requireNonNull(buildSendMessageRequest(lastPage, bookId, "last", email, name))))
                         .build()
         );
     }
 
-    private SendMessageBatchRequestEntry buildSendMessageRequest(final String pageUrl, final String bookId, final String filename) {
+    private SendMessageBatchRequestEntry buildSendMessageRequest(final String pageUrl, final String bookId) {
+        return buildSendMessageRequest(pageUrl, bookId, null, null, null);
+    }
+
+    private SendMessageBatchRequestEntry buildSendMessageRequest(final String pageUrl, final String bookId, final String filename, final String email, final String name) {
         try {
             final var url = new URL("https://kazneb.kz" + pageUrl.replace("&amp;", "&"));
             final var filenameWithoutExtension = isBlank(filename) ? removeExtension(getName(url.getPath())) : filename;
             final var extension = getExtension(url.getPath());
             final var attributes = Map.of(
                     "filepath", format("%s/%s.%s", bookId, filenameWithoutExtension, extension),
-                    "content-type", format("image/%s", extension)
+                    "content-type", format("image/%s", extension),
+                    "initiator.email", email,
+                    "initiator.name", name
             );
             final var messageAttributes = attributes.entrySet()
                     .stream()
+                    .filter(e -> nonNull(e.getValue()))
                     .collect(toMap(
                             Map.Entry::getKey,
                             e -> MessageAttributeValue.builder()

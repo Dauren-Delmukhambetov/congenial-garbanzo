@@ -10,6 +10,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.apache.commons.io.IOUtils.toByteArray;
+import static org.serverless.oqu.kerek.Constants.S3_OBJECT_INITIATOR_EMAIL_ATTR;
+import static org.serverless.oqu.kerek.Constants.S3_OBJECT_INITIATOR_NAME_ATTR;
 import static software.amazon.awssdk.core.sync.RequestBody.fromBytes;
 import static software.amazon.awssdk.utils.StringUtils.isBlank;
 
@@ -23,12 +25,14 @@ public class BookPagesLoader extends SqsEventHandler {
            final var bucketName = System.getenv("BUCKET_NAME");
            final var filepath = getMessageAttributeOrDefault(input, "filepath", "");
            final var contentType = getMessageAttributeOrDefault(input, "content-type", null);
+           final var initiatorEmail = getMessageAttributeOrDefault(input, "initiator.email", null);
+           final var initiatorName = getMessageAttributeOrDefault(input, "initiator.name", null);
 
            try (final var bookPageImage = new URL(input.getBody()).openStream()) {
                final var request = PutObjectRequest.builder()
                        .bucket(bucketName)
                        .key(filepath)
-                       .metadata(buildObjectMetadata(contentType))
+                       .metadata(buildObjectMetadata(contentType, initiatorEmail, initiatorName))
                        .build();
 
                s3Client.putObject(request, fromBytes(toByteArray(bookPageImage)));
@@ -40,13 +44,11 @@ public class BookPagesLoader extends SqsEventHandler {
         return null;
     }
 
-    private String getMessageAttributeOrDefault(final SQSEvent.SQSMessage input, final String attribute, final String defaultValue) {
-        return input.getMessageAttributes().containsKey(attribute) ? input.getMessageAttributes().get(attribute).getStringValue() : defaultValue;
-    }
-
-    private Map<String, String> buildObjectMetadata(final String contentType) {
+    private Map<String, String> buildObjectMetadata(final String contentType, final String email, final String name) {
         final var metadata = new HashMap<String, String>();
         if (!isBlank(contentType)) metadata.put("Content-Type", contentType);
+        if (!isBlank(email)) metadata.put(S3_OBJECT_INITIATOR_EMAIL_ATTR, email);
+        if (!isBlank(name)) metadata.put(S3_OBJECT_INITIATOR_NAME_ATTR, name);
         return metadata;
     }
 }

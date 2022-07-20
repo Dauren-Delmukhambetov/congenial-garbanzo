@@ -25,6 +25,8 @@ import static java.nio.file.Paths.get;
 import static java.util.Map.of;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.io.IOUtils.toByteArray;
+import static org.serverless.oqu.kerek.Constants.S3_OBJECT_INITIATOR_EMAIL_ATTR;
+import static org.serverless.oqu.kerek.Constants.S3_OBJECT_INITIATOR_NAME_ATTR;
 import static software.amazon.awssdk.core.sync.RequestBody.fromBytes;
 
 public class BookPagesAssembler extends S3EventHandler {
@@ -75,11 +77,17 @@ public class BookPagesAssembler extends S3EventHandler {
     }
 
     private void uploadPdfFileToS3(final String bucketName, final String directory, final Path tempFile) throws IOException {
+        final var headObject = s3Client.headObject(h -> h.bucket(bucketName).key(format("%s/last.png", directory)).build());
+        final var metadata = of(
+                "Content-Type", "application/pdf",
+                S3_OBJECT_INITIATOR_EMAIL_ATTR, headObject.metadata().get(S3_OBJECT_INITIATOR_EMAIL_ATTR),
+                S3_OBJECT_INITIATOR_NAME_ATTR, headObject.metadata().get(S3_OBJECT_INITIATOR_NAME_ATTR)
+        );
         try (final var pdfFileStream = newInputStream(tempFile)) {
             final var putRequest = PutObjectRequest.builder()
                     .bucket(bucketName)
                     .key(format("%s/%s.pdf", directory, "book"))
-                    .metadata(of("Content-Type", "application/pdf"))
+                    .metadata(metadata)
                     .build();
             s3Client.putObject(putRequest, fromBytes(toByteArray(pdfFileStream)));
         }

@@ -20,4 +20,8 @@ public abstract class SqsEventHandler extends BaseHandler<SQSEvent.SQSMessage, V
         }
         return null;
     }
+
+    protected String getMessageAttributeOrDefault(final SQSEvent.SQSMessage input, final String attribute, final String defaultValue) {
+        return input.getMessageAttributes().containsKey(attribute) ? input.getMessageAttributes().get(attribute).getStringValue() : defaultValue;
+    }
 }

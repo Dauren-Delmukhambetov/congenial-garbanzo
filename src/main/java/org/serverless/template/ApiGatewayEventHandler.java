@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.Map;
 
+import static java.util.Collections.emptyMap;
 import static java.util.Map.of;
 
 @RequiredArgsConstructor
@@ -25,12 +26,16 @@ public abstract class ApiGatewayEventHandler<T, R> extends BaseHandler<T, R, API
     );
     protected final Class<T> inputType;
 
+    private String email;
+    private String name;
+
     @Override
     public APIGatewayProxyResponseEvent handleRequest(final APIGatewayProxyRequestEvent input, final Context context) {
         try {
             log(context, "Starting processing request %s with input: %s", input.getRequestContext().getRequestId(), input.getBody());
             if (input.getRequestContext().getAuthorizer() != null) {
                 log(context, "Request context is %s ", gson.toJson(input.getRequestContext()));
+                initUserDataFromIdTokenClaims(input);
             }
             log(context, "Queue name from env vars is %s", System.getenv("QUEUE_NAME"));
 
@@ -56,5 +61,19 @@ public abstract class ApiGatewayEventHandler<T, R> extends BaseHandler<T, R, API
                     .withHeaders(headers)
                     .withBody("Error occurred while processing request: " + e.getMessage());
         }
+    }
+
+    private void initUserDataFromIdTokenClaims(final APIGatewayProxyRequestEvent input) {
+        final var claims = (Map<String, String>) input.getRequestContext().getAuthorizer().getOrDefault("claims", emptyMap());
+        this.email = claims.get("email");
+        this.name = claims.get("name");
+    }
+
+    protected String email() {
+        return this.email;
+    }
+
+    protected String name() {
+        return this.name;
     }
 }
