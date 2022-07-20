@@ -3,14 +3,15 @@ package org.serverless.oqu.kerek;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.models.s3.S3EventNotification;
 import org.serverless.template.S3EventHandler;
-import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
-import software.amazon.awssdk.services.s3.model.S3Object;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.ses.model.Body;
 import software.amazon.awssdk.services.ses.model.SendEmailRequest;
 
 import java.net.URL;
 import java.time.Duration;
+
+import static java.lang.String.format;
+import static org.serverless.oqu.kerek.Constants.S3_OBJECT_INITIATOR_EMAIL_ATTR;
 
 public class BookReadinessNotifier extends S3EventHandler {
 
@@ -24,9 +25,9 @@ public class BookReadinessNotifier extends S3EventHandler {
 
             final var bucketName = input.getS3().getBucket().getName();
             final var directory = input.getS3().getObject().getKey().split("/")[0];
-            final var key = findPdfFileKey(bucketName, directory);
-            final var url = buildPresignedUrlToPdfFile(bucketName, key);
-            sendEmail(url);
+            final var email = acquireInitiatorEmail(bucketName, directory);
+            final var url = buildPresignedUrlToPdfFile(bucketName, directory);
+            sendEmail(url, email);
 
             log(context, "Completed processing S3 Event notification record (Object Key = %s)", input.getS3().getObject().getKey());
         } catch (Exception e) {
@@ -35,16 +36,16 @@ public class BookReadinessNotifier extends S3EventHandler {
         return null;
     }
 
-    private void sendEmail(final URL linkToFile) {
+    private void sendEmail(final URL linkToFile, final String email) {
 
         final var content = Body.builder()
                 .html(c -> c.data("<html> <head></head> <body> <a href=\"" + linkToFile.toExternalForm() + "\">Link to file</a> </body></html>"))
                 .build();
 
         SendEmailRequest emailRequest = SendEmailRequest.builder()
-                .destination(d -> d.toAddresses("dauren_del@mail.ru"))
+                .destination(d -> d.toAddresses(email))
                 .message(m -> m.subject(s -> s.data("Your book is ready to download")).body(content))
-                .source("dauren.del@gmail.com")
+                .source("dauren_del@mail.ru")
                 .build();
 
         final var response = sesClient.sendEmail(emailRequest);
@@ -52,10 +53,10 @@ public class BookReadinessNotifier extends S3EventHandler {
         System.out.printf("Email with ID (%s) has been send to user", response.messageId());
     }
 
-    private URL buildPresignedUrlToPdfFile(final String bucketName, final String key) {
+    private URL buildPresignedUrlToPdfFile(final String bucketName, final String directory) {
         final var getObjectPresignRequest =  GetObjectPresignRequest.builder()
-                .signatureDuration(Duration.ofMinutes(10))
-                .getObjectRequest(r -> r.bucket(bucketName).key(key))
+                .signatureDuration(Duration.ofDays(3))
+                .getObjectRequest(r -> r.bucket(bucketName).key(format("%s/book.pdf", directory)))
                 .build();
 
         final var presignedGetObjectRequest =
@@ -64,17 +65,8 @@ public class BookReadinessNotifier extends S3EventHandler {
         return presignedGetObjectRequest.url();
     }
 
-    private String findPdfFileKey(final String bucketName, final String directory) {
-        final var listRequest = ListObjectsV2Request.builder()
-                .bucket(bucketName)
-                .prefix(directory)
-                .build();
-
-        return s3Client.listObjectsV2(listRequest)
-                .contents()
-                .stream()
-                .map(S3Object::key)
-                .filter(key -> key.endsWith(".pdf"))
-                .findFirst().orElse(null);
+    private String acquireInitiatorEmail(final String bucketName, final String directory) {
+        final var headObject = s3Client.headObject(h -> h.bucket(bucketName).key(format("%s/book.pdf", directory)).build());
+        return headObject.metadata().get(S3_OBJECT_INITIATOR_EMAIL_ATTR);
     }
 }
