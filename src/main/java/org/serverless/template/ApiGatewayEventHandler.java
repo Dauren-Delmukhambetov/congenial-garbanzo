@@ -38,7 +38,6 @@ public abstract class ApiGatewayEventHandler<T, R> extends BaseHandler<T, R, API
                 initUserDataFromIdTokenClaims(input);
                 log(context, "User info from request context is %s:%s ", email(), name());
             }
-            log(context, "Queue name from env vars is %s", System.getenv("QUEUE_NAME"));
 
             final var request = gson.fromJson(input.getBody(), inputType);
             final var response = gson.toJson(doHandleRequest(request, context));
