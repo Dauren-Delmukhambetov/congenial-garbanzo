@@ -50,7 +50,6 @@ public class BookPagesAssembler extends S3EventHandler {
             log(context, "Completed processing S3 Event notification record (Object Key = %s)", input.getS3().getObject().getKey());
         } catch (Exception e) {
             log(context, "Error occurred while processing S3 Event notification record (Object Key = %s): %s", input.getS3().getObject().getKey(), e.getMessage());
-            e.printStackTrace();
         }
         return null;
     }
@@ -83,7 +82,6 @@ public class BookPagesAssembler extends S3EventHandler {
     private void uploadPdfFileToS3(final String bucketName, final String directory, final Path tempFile) throws IOException {
         final var headObject = s3Client.headObject(h -> h.bucket(bucketName).key(format("%s/last.png", directory)).build());
         final var metadata = of(
-                "Content-Type", "application/pdf",
                 S3_OBJECT_INITIATOR_EMAIL_ATTR, headObject.metadata().get(S3_OBJECT_INITIATOR_EMAIL_ATTR),
                 S3_OBJECT_INITIATOR_NAME_ATTR, headObject.metadata().get(S3_OBJECT_INITIATOR_NAME_ATTR)
         );
@@ -91,6 +89,7 @@ public class BookPagesAssembler extends S3EventHandler {
             final var putRequest = PutObjectRequest.builder()
                     .bucket(bucketName)
                     .key(format("%s/%s.pdf", directory, "book"))
+                    .contentType("application/pdf")
                     .metadata(metadata)
                     .build();
             s3Client.putObject(putRequest, fromBytes(toByteArray(pdfFileStream)));
