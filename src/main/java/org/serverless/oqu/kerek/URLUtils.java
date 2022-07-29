@@ -1,8 +1,12 @@
 package org.serverless.oqu.kerek;
 
+import org.serverless.template.ClientException;
+import software.amazon.awssdk.utils.StringUtils;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import static java.lang.String.format;
 import static java.util.Arrays.stream;
 
 public final class URLUtils {
@@ -15,12 +19,14 @@ public final class URLUtils {
             return stream(new URL(url).getQuery()
                     .split("&"))
                     .filter(pair -> pair.startsWith(queryParam))
-                    .map(pair -> pair.split("=")[1])
-                    .findFirst().orElse(null);
+                    .map(pair -> pair.split("="))
+                    .filter(array -> array.length == 2)
+                    .map(array -> array[1])
+                    .filter(StringUtils::isNotBlank)
+                    .findFirst()
+                    .orElseThrow(() -> new ClientException(400, format("The URL (%s) does not contain the query parameter %s", url, queryParam)));
         } catch (MalformedURLException e) {
-            System.out.printf("Error occurred while trying to parse URL %s : %s%n", url, e.getMessage());
+            throw new ClientException(400, format("The URL (%s) is malformed", url));
         }
-        return null;
     }
-
 }
