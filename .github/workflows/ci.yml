@@ -104,9 +104,11 @@ jobs:
         env:
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GMAIL_USERNAME: ${{ secrets.GMAIL_USERNAME }}
+          GMAIL_PASSWORD: ${{ secrets.GMAIL_PASSWORD }}
         run: |
           aws cloudformation deploy \
               --template-file out.yml \
               --stack-name oqu-kerek-api \
-              --parameter-overrides GoogleClientID=$GOOGLE_CLIENT_ID GoogleClientSecret=$GOOGLE_CLIENT_SECRET \
+              --parameter-overrides GoogleClientID=$GOOGLE_CLIENT_ID GoogleClientSecret=$GOOGLE_CLIENT_SECRET EmailSenderUsername=$GMAIL_USERNAME EmailSenderPassword=$GMAIL_PASSWORD \
               --capabilities CAPABILITY_IAM

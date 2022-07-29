@@ -9,6 +9,13 @@ Parameters:
     Type: String
     NoEcho: true
     Description: Client's secret for Google auth client
+  EmailSenderUsername:
+    Type: String
+    Description: Username behalf of whom all email will be sent to users
+  EmailSenderPassword:
+    Type: String
+    NoEcho: true
+    Description: Username password of Gmail account
 Resources:
   BookParserApi:
     Type: 'AWS::Serverless::Api'
@@ -269,6 +276,10 @@ Resources:
       MemorySize: 1024
       Timeout: 300
       CodeUri: build/distributions/oqu-kerek-app-0.1.0.zip
+      Environment:
+        Variables:
+          SENDER_EMAIL: !Ref EmailSenderUsername
+          SENDER_PASSWORD: !Ref EmailSenderPassword
       Policies:
         # Policy that allows Lambda function to read, write, and delete objects in an Amazon S3 bucket
         - S3CrudPolicy:

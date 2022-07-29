@@ -25,6 +25,7 @@ dependencies {
     implementation 'org.jsoup:jsoup:1.14.3'
     implementation 'commons-io:commons-io:2.11.0'
     implementation 'com.itextpdf:itext7-core:7.2.3'
+    implementation 'jakarta.mail:jakarta.mail-api:2.1.0'
     runtimeOnly 'com.amazonaws:aws-lambda-java-log4j2:1.5.1'
     compileOnly 'org.projectlombok:lombok:1.18.24'
 
