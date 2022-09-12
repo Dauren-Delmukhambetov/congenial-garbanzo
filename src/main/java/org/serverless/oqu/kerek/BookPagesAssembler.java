@@ -7,6 +7,7 @@ import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Image;
+import lombok.extern.slf4j.Slf4j;
 import org.serverless.template.S3EventHandler;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
@@ -16,6 +17,8 @@ import software.amazon.awssdk.services.s3.model.S3Object;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.HashSet;
 
 import static com.itextpdf.io.image.ImageDataFactory.create;
 import static java.lang.String.format;
@@ -29,6 +32,7 @@ import static org.serverless.oqu.kerek.Constants.S3_OBJECT_INITIATOR_EMAIL_ATTR;
 import static org.serverless.oqu.kerek.Constants.S3_OBJECT_INITIATOR_NAME_ATTR;
 import static software.amazon.awssdk.core.sync.RequestBody.fromBytes;
 
+@Slf4j
 public class BookPagesAssembler extends S3EventHandler {
 
     static {
@@ -38,7 +42,7 @@ public class BookPagesAssembler extends S3EventHandler {
     @Override
     protected Void doHandleRequest(S3EventNotification.S3EventNotificationRecord input, Context context) {
         try {
-            log(context, "Starting processing S3 Event notification record (Object Key = %s)", input.getS3().getObject().getKey());
+            log.info("Starting processing S3 Event notification record (Object Key = {})", input.getS3().getObject().getKey());
 
             final var bucketName = System.getenv("BUCKET_NAME");
             final var directory = input.getS3().getObject().getKey().split("/")[0];
@@ -47,14 +51,14 @@ public class BookPagesAssembler extends S3EventHandler {
             assembleBookPages(bucketName, directory, tempFile);
             uploadPdfFileToS3(bucketName, directory, tempFile);
 
-            log(context, "Completed processing S3 Event notification record (Object Key = %s)", input.getS3().getObject().getKey());
+            log.info("Completed processing S3 Event notification record (Object Key = {})", input.getS3().getObject().getKey());
         } catch (Exception e) {
-            log(context, "Error occurred while processing S3 Event notification record (Object Key = %s): %s", input.getS3().getObject().getKey(), e.getMessage());
+            log.error("Error occurred while processing S3 Event notification record (Object Key = {}): {}", input.getS3().getObject().getKey(), e.getMessage());
         }
         return null;
     }
 
-    private void assembleBookPages(final String bucketName, final String directory, final Path tempFile) throws FileNotFoundException {
+    private void assembleBookPages(final String bucketName, final String directory, final Path tempFile) throws IOException {
         final var listRequest = ListObjectsV2Request.builder()
                 .bucket(bucketName)
                 .prefix(directory)
@@ -96,7 +100,7 @@ public class BookPagesAssembler extends S3EventHandler {
         }
     }
 
-    private byte[] readObject(final String bucketName, final String key) {
+    private byte[] readObject(final String bucketName, final String key) throws IOException {
         final var getRequest = GetObjectRequest.builder()
                 .bucket(bucketName)
                 .key(key)
@@ -105,8 +109,8 @@ public class BookPagesAssembler extends S3EventHandler {
         try (final var stream = s3Client.getObjectAsBytes(getRequest).asInputStream()) {
             return stream.readAllBytes();
         } catch (IOException e) {
-            System.err.printf("Error while trying to read object %s from bucket %s%n", key, bucketName);
-            throw new RuntimeException(e);
+            log.error("Error while trying to read object {} from bucket {}", key, bucketName);
+            throw e;
         }
     }
 
