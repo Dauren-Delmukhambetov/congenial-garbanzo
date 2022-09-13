@@ -1,4 +1,4 @@
-package org.serverless.oqu.kerek;
+package org.serverless.oqu.kerek.util;
 
 import org.serverless.template.ClientException;
 import software.amazon.awssdk.utils.StringUtils;

@@ -2,6 +2,7 @@ package org.serverless.oqu.kerek;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.serverless.oqu.kerek.util.URLUtils;
 import org.serverless.template.ClientException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

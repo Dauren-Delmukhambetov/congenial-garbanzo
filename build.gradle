@@ -3,7 +3,7 @@ plugins {
     id 'org.sonarqube' version '3.4.0.2513'
 }
 
-group 'org.serverless.oqu.kerer'
+group 'org.serverless.oqu.kerek'
 version '0.1.0'
 
 sourceCompatibility = JavaVersion.VERSION_11

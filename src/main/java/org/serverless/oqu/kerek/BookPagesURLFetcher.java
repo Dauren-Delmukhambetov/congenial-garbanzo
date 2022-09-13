@@ -28,8 +28,8 @@ import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.io.FilenameUtils.getExtension;
 import static org.apache.commons.io.FilenameUtils.getName;
 import static org.apache.commons.io.FilenameUtils.removeExtension;
-import static org.serverless.oqu.kerek.HtmlParseUtils.parseBookPagesUrls;
-import static org.serverless.oqu.kerek.URLUtils.extractQueryParamValue;
+import static org.serverless.oqu.kerek.util.HtmlParseUtils.parseBookPagesUrls;
+import static org.serverless.oqu.kerek.util.URLUtils.extractQueryParamValue;
 import static software.amazon.awssdk.utils.StringUtils.isBlank;
 import static software.amazon.awssdk.utils.StringUtils.isNotBlank;
 
@@ -51,6 +51,7 @@ public class BookPagesURLFetcher extends SqsEventHandler {
 
             if (bookExists(bucketName, bookId)) {
                 log(context, "Book with ID %s has already been loaded", bookId);
+                return null;
             }
 
             final var pages = parseBookPagesUrls(input.getBody());

@@ -9,13 +9,6 @@ Parameters:
     Type: String
     NoEcho: true
     Description: Client's secret for Google auth client
-  EmailSenderUsername:
-    Type: String
-    Description: Username behalf of whom all email will be sent to users
-  EmailSenderPassword:
-    Type: String
-    NoEcho: true
-    Description: Username password of Gmail account
 Resources:
   BookParserApi:
     Type: 'AWS::Serverless::Api'
@@ -84,6 +77,7 @@ Resources:
         - profile
       CallbackURLs:
         - https://example.com
+        - https://oqukerek.de/callback
       ClientName: !Sub "${AWS::StackName}-user-pool-web-app-client"
       SupportedIdentityProviders:
         - !Ref ApiUserPoolGoogleIdentityProvider
@@ -138,6 +132,29 @@ Resources:
 
 
   # ---- Functions ----
+
+  BookInfoFetcherFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Runtime: java11
+      Handler: org.serverless.oqu.kerek.BookInfoFetcher::handleRequest
+      MemorySize: 1024
+      Timeout: 300
+      CodeUri: build/distributions/oqu-kerek-app-0.1.0.zip
+      Environment:
+        Variables:
+          BOOKS_BUCKET_NAME: !Sub "${AWS::StackName}-books"
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Sub "${AWS::StackName}-books"
+      Events:
+        BookInfoFetcherApiEvent:
+          Type: Api
+          Properties:
+            Path: /books/{bookId}
+            Method: get
+            RestApiId:
+              Ref: BookParserApi
 
   BookParserLambdaFunction:
     Type: 'AWS::Serverless::Function'
