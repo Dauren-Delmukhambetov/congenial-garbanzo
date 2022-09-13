@@ -1,8 +1,10 @@
 package org.serverless.oqu.kerek;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.serverless.oqu.kerek.model.BookInfo;
 import org.serverless.template.ApiGatewayEventHandler;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 
@@ -11,10 +13,10 @@ import java.util.Map;
 import static java.lang.String.format;
 import static java.util.Map.of;
 import static java.util.stream.Collectors.toMap;
-import static org.serverless.oqu.kerek.HtmlParseUtils.parseBookInfo;
-import static org.serverless.oqu.kerek.URLUtils.extractQueryParamValue;
+import static org.serverless.oqu.kerek.util.HtmlParseUtils.parseBookInfo;
+import static org.serverless.oqu.kerek.util.URLUtils.extractQueryParamValue;
 
-public class BookParser extends ApiGatewayEventHandler<BookParser.BookParsingRequest, BookParser.BookInfo> {
+public class BookParser extends ApiGatewayEventHandler<BookParser.BookParsingRequest, BookInfo> {
 
     static {
         initSqsClient();
@@ -45,12 +47,9 @@ public class BookParser extends ApiGatewayEventHandler<BookParser.BookParsingReq
         return parseBookInfo(format("https://kazneb.kz/ru/catalogue/view/%s", bookId));
     }
 
-    @Getter
-    @RequiredArgsConstructor
-    static class BookInfo {
-        private final String title;
-        private final String author;
-        private final String imageUrl;
+    @Override
+    protected BookParsingRequest getRequestData(final APIGatewayProxyRequestEvent input) {
+        return gson.fromJson(input.getBody(), inputType);
     }
 
     @Getter

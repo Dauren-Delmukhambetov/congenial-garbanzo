@@ -5,7 +5,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 
 import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.serverless.oqu.kerek.HtmlParseUtils.parseBookInfo;
+import static org.serverless.oqu.kerek.util.HtmlParseUtils.parseBookInfo;
 
 class HtmlParseUtilsTest {
 

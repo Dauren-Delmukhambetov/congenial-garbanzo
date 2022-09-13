@@ -39,7 +39,7 @@ public abstract class ApiGatewayEventHandler<T, R> extends BaseHandler<T, R, API
                 log(context, "User info from request context is %s:%s ", email(), name());
             }
 
-            final var request = gson.fromJson(input.getBody(), inputType);
+            final var request = getRequestData(input);
             final var response = gson.toJson(doHandleRequest(request, context));
 
             log(context, "Completed processing request %s with output: %s", input.getRequestContext().getRequestId(), response);
@@ -62,6 +62,8 @@ public abstract class ApiGatewayEventHandler<T, R> extends BaseHandler<T, R, API
                     .withBody("Error occurred while processing request: " + e.getMessage());
         }
     }
+
+    protected abstract T getRequestData(final APIGatewayProxyRequestEvent input);
 
     private void initUserDataFromIdTokenClaims(final APIGatewayProxyRequestEvent input) {
         final var claims = (Map<String, String>) input.getRequestContext().getAuthorizer().getOrDefault("claims", emptyMap());
