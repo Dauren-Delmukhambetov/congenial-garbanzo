@@ -9,9 +9,11 @@ import org.serverless.template.ApiGatewayEventHandler;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 
 import java.util.Map;
+import java.util.Objects;
 
 import static java.lang.String.format;
 import static java.util.Map.of;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toMap;
 import static org.serverless.oqu.kerek.util.HtmlParseUtils.parseBookInfo;
 import static org.serverless.oqu.kerek.util.URLUtils.extractQueryParamValue;
@@ -44,7 +46,13 @@ public class BookParser extends ApiGatewayEventHandler<BookParser.BookParsingReq
 
         sqs.sendMessage(m -> m.queueUrl(queueUrl).messageBody(bookUrl).messageAttributes(metadata).build());
 
-        return parseBookInfo(format("https://kazneb.kz/ru/catalogue/view/%s", bookId));
+        final var bookShortInfo = requireNonNull(parseBookInfo(format("https://kazneb.kz/ru/catalogue/view/%s", bookId)));
+        return BookInfo.builder()
+                .id(bookId)
+                .title(bookShortInfo.getTitle())
+                .author(bookShortInfo.getAuthor())
+                .imageUrl(bookShortInfo.getImageUrl())
+                .build();
     }
 
     @Override

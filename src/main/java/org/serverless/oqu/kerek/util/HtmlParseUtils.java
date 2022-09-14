@@ -4,7 +4,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.serverless.oqu.kerek.model.BookInfo;
+import org.serverless.oqu.kerek.model.BookShortInfo;
 
 import java.io.IOException;
 import java.net.URL;
@@ -52,12 +52,7 @@ public final class HtmlParseUtils {
         return pages.stream().filter(Objects::nonNull).collect(Collectors.toList());
     }
 
-    public static BookInfo parseBookInfo(final String url) {
-        return parseBookInfo(url, null);
-
-    }
-
-    public static BookInfo parseBookInfo(final String url, final URL downloadUrl) {
+    public static BookShortInfo parseBookInfo(final String url) {
         Document bookPage;
         try {
             bookPage = Jsoup.parse(new URL(url), 30_000);
@@ -70,11 +65,10 @@ public final class HtmlParseUtils {
         final var author = requireNonNull(bookPage.select(".arrival-info-author").first()).text();
         final var imageUrl = "https://kazneb.kz" + requireNonNull(bookPage.select(".viewing-pic img[src]").first()).attributes().get("src");
 
-        return new BookInfo(
+        return new BookShortInfo(
                 isBlank(title) ? null : title,
                 isBlank(author) ? null : author,
-                isBlank(imageUrl) ? null : imageUrl,
-                downloadUrl
+                isBlank(imageUrl) ? null : imageUrl
         );
     }
 
