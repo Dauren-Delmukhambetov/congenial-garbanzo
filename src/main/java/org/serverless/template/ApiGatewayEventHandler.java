@@ -22,7 +22,9 @@ public abstract class ApiGatewayEventHandler<T, R> extends BaseHandler<T, R, API
 
     protected final Map<String, String> headers = of(
             "Content-Type", "application/json",
-            "Access-Control-Allow-Origin", "*"
+            "Access-Control-Allow-Origin", "*",
+            "Access-Control-Allow-Methods", "OPTIONS,POST,GET",
+            "Access-Control-Allow-Headers", "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Forwarded-For"
     );
     protected final Class<T> inputType;
 
