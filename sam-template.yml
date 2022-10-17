@@ -143,6 +143,9 @@ Resources:
             NonKeyAttributes:
               - "BookID"
             ProjectionType: "INCLUDE"
+          ProvisionedThroughput:
+            ReadCapacityUnits: "3"
+            WriteCapacityUnits: "3"
 
       ProvisionedThroughput:
         ReadCapacityUnits: "3"
