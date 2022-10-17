@@ -110,20 +110,8 @@ Resources:
           AttributeName: "BookID"
           AttributeType: "S"
         -
-          AttributeName: "Title"
-          AttributeType: "S"
-        -
-          AttributeName: "Author"
-          AttributeType: "S"
-        -
-          AttributeName: "ImageUrl"
-          AttributeType: "S"
-        -
           AttributeName: "UserEmail"
           AttributeType: "S"
-        -
-          AttributeName: "RequestedAt"
-          AttributeType: "N"
       KeySchema:
         -
           AttributeName: "BookID"
