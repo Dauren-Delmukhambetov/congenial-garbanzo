@@ -107,9 +107,6 @@ Resources:
       TableName: !Sub "${AWS::StackName}-books-table"
       AttributeDefinitions:
         -
-          AttributeName: "BookID"
-          AttributeType: "S"
-        -
           AttributeName: "Title"
           AttributeType: "S"
         -
@@ -117,9 +114,6 @@ Resources:
           AttributeType: "S"
         -
           AttributeName: "ImageUrl"
-          AttributeType: "S"
-        -
-          AttributeName: "UserEmail"
           AttributeType: "S"
         -
           AttributeName: "RequestedAt"
