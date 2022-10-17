@@ -58,7 +58,6 @@ public abstract class ApiGatewayEventHandler<T, R> extends BaseHandler<T, R, API
                     .withBody(e.getMessage());
         } catch (Exception e) {
             log(context, "Error occurred while processing request %s: %s", input.getRequestContext().getRequestId(), e.getMessage());
-            e.printStackTrace();
             return new APIGatewayProxyResponseEvent()
                     .withStatusCode(500)
                     .withHeaders(headers)

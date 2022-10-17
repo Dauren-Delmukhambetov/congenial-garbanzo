@@ -9,7 +9,6 @@ import org.serverless.template.ApiGatewayEventHandler;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 
 import java.util.Map;
-import java.util.Objects;
 
 import static java.lang.String.format;
 import static java.util.Map.of;
