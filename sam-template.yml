@@ -77,7 +77,7 @@ Resources:
         - profile
       CallbackURLs:
         - https://example.com
-        - https://oqukerek.de/callback
+        - https://oqukerek.de/callback # move to parameters
       ClientName: !Sub "${AWS::StackName}-user-pool-web-app-client"
       SupportedIdentityProviders:
         - !Ref ApiUserPoolGoogleIdentityProvider
@@ -99,6 +99,54 @@ Resources:
         name: 'name'
         picture: 'picture'
         username: 'sub'
+
+  # ---- Tables ----
+  BooksTable:
+    Type: 'AWS::DynamoDB::Table'
+    Properties:
+      TableName: !Sub "${AWS::StackName}-books-table"
+      AttributeDefinitions:
+        -
+          AttributeName: "BookID"
+          AttributeType: "S"
+        -
+          AttributeName: "Title"
+          AttributeType: "S"
+        -
+          AttributeName: "Author"
+          AttributeType: "S"
+        -
+          AttributeName: "ImageUrl"
+          AttributeType: "S"
+        -
+          AttributeName: "UserEmail"
+          AttributeType: "S"
+        -
+          AttributeName: "RequestedAt"
+          AttributeType: "N"
+      KeySchema:
+        -
+          AttributeName: "BookID"
+          KeyType: "HASH"
+        -
+          AttributeName: "UserEmail"
+          KeyType: "RANGE"
+
+      GlobalSecondaryIndexes:
+        -
+          IndexName: !Sub "${AWS::StackName}-books-table-gsi"
+          KeySchema:
+            -
+              AttributeName: "UserEmail"
+              KeyType: "HASH"
+          Projection:
+            NonKeyAttributes:
+              - "BookID"
+            ProjectionType: "INCLUDE"
+
+      ProvisionedThroughput:
+        ReadCapacityUnits: "3"
+        WriteCapacityUnits: "3"
 
   # ---- Queues ----
 
