@@ -4,6 +4,8 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClientBuilder;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.ses.SesClient;
@@ -16,10 +18,22 @@ public abstract class BaseHandler<T, R, I, O> implements RequestHandler<I, O> {
     protected static S3Presigner s3Presigner;
     protected static SesClient sesClient;
 
+    protected static DynamoDbClient dynamoDbClient;
+
     protected abstract R doHandleRequest(final T input, final Context context);
 
     protected void log(Context context, String message, Object... args) {
         context.getLogger().log(String.format(message, args));
+    }
+
+    protected static void initDynamoDbClient() {
+        if (dynamoDbClient != null) return;
+        final var start = System.currentTimeMillis();
+        dynamoDbClient = DynamoDbClient.builder()
+                .region(getRegion())
+                .credentialsProvider(EnvironmentVariableCredentialsProvider.create())
+                .build();
+        System.out.printf("initS3Client took %d milliseconds to complete %n", System.currentTimeMillis() - start);
     }
 
     protected static void initS3Client() {

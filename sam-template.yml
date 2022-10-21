@@ -169,7 +169,6 @@ Resources:
     Properties:
       BucketName: !Sub "${AWS::StackName}-books"
 
-
   # ---- Functions ----
 
   BookInfoFetcherFunction:
@@ -206,10 +205,13 @@ Resources:
       Environment:
         Variables:
           QUEUE_NAME: !Ref BookParsingRequestQueue
+          TABLE_NAME: !Ref BooksTable
       Policies:
         # Policy that allows Lambda function to send messages to the queue with a given name
         - SQSSendMessagePolicy:
             QueueName: !GetAtt BookParsingRequestQueue.QueueName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref BooksTable
       Events:
         BookParserApiEvent:
           Type: Api
@@ -225,6 +227,7 @@ Resources:
   BookPagesURLFetcherLambdaFunction:
     Type: 'AWS::Serverless::Function'
     Properties:
+      Description: "Function fetches book page image URLs and sends them to the queue"
       Runtime: java11
       Handler: org.serverless.oqu.kerek.BookPagesURLFetcher::handleRequest
       MemorySize: 1024
