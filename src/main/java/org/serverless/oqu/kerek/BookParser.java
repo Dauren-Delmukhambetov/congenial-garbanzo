@@ -5,12 +5,11 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.serverless.oqu.kerek.model.BookInfo;
+import org.serverless.oqu.kerek.model.BookRequestContext;
 import org.serverless.template.ApiGatewayEventHandler;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 
-import java.util.HashMap;
+import java.time.OffsetDateTime;
 import java.util.Map;
 
 import static java.lang.String.format;
@@ -24,7 +23,7 @@ public class BookParser extends ApiGatewayEventHandler<BookParser.BookParsingReq
 
     static {
         initSqsClient();
-        initDynamoDbClient();
+        initBookRepository();
     }
 
     public BookParser() {
@@ -32,8 +31,37 @@ public class BookParser extends ApiGatewayEventHandler<BookParser.BookParsingReq
     }
 
     @Override
-    protected BookInfo doHandleRequest(final BookParsingRequest input, final Context context) {
-        final var bookId = extractQueryParamValue(input.url, "brId");
+    protected BookInfo doHandleRequest(final BookParsingRequest request, final Context context) {
+        final var bookId = extractBookIdFromUrl(request);
+        final var book = fetchBookInfo(bookId);
+        saveBookInfoInDb(book);
+        sendMessageToQueue(bookId);
+        return book;
+    }
+
+    private String extractBookIdFromUrl(final BookParsingRequest request) {
+        return extractQueryParamValue(request.url, "brId");
+    }
+
+    private void saveBookInfoInDb(final BookInfo bookInfo) {
+        final var requestContext = BookRequestContext.builder()
+                .userEmail(email())
+                .requestedAt(OffsetDateTime.now())
+                .build();
+        bookRepository.save(bookInfo, requestContext);
+    }
+
+    private BookInfo fetchBookInfo(final String bookId) {
+        final var bookShortInfo = requireNonNull(parseBookInfo(format("https://kazneb.kz/ru/catalogue/view/%s", bookId)));
+        return BookInfo.builder()
+                .id(bookId)
+                .title(bookShortInfo.getTitle())
+                .author(bookShortInfo.getAuthor())
+                .imageUrl(bookShortInfo.getImageUrl())
+                .build();
+    }
+
+    private void sendMessageToQueue(final String bookId) {
         final var queueUrl = System.getenv("QUEUE_NAME");
         final var bookUrl = format("https://kazneb.kz/ru/bookView/view?brId=%s&simple=true", bookId);
         final var metadata = of("initiator.email", email(), "initiator.name", name())
@@ -48,34 +76,6 @@ public class BookParser extends ApiGatewayEventHandler<BookParser.BookParsingReq
                 ));
 
         sqs.sendMessage(m -> m.queueUrl(queueUrl).messageBody(bookUrl).messageAttributes(metadata).build());
-
-        final var bookShortInfo = requireNonNull(parseBookInfo(format("https://kazneb.kz/ru/catalogue/view/%s", bookId)));
-        final var bookInfo = BookInfo.builder()
-                .id(bookId)
-                .title(bookShortInfo.getTitle())
-                .author(bookShortInfo.getAuthor())
-                .imageUrl(bookShortInfo.getImageUrl())
-                .build();
-        saveBook(bookInfo, email());
-        return bookInfo;
-    }
-
-    private void saveBook(BookInfo bookInfo, String initiator) {
-        final var putItemRequest = PutItemRequest.builder()
-                .tableName(System.getenv("TABLE_NAME"))
-                .item(buildItem(bookInfo, initiator))
-                        .build();
-        dynamoDbClient.putItem(putItemRequest);
-    }
-
-    private Map<String, AttributeValue> buildItem(BookInfo bookInfo, String initiator) {
-        final var item = new HashMap<String, AttributeValue>();
-        item.put("BookID", AttributeValue.builder().s(bookInfo.getId()).build());
-        item.put("UserEmail", AttributeValue.builder().s(initiator).build());
-        item.put("Title", AttributeValue.builder().s(bookInfo.getTitle()).build());
-        item.put("Author", AttributeValue.builder().s(bookInfo.getAuthor()).build());
-        item.put("ImageUrl", AttributeValue.builder().s(bookInfo.getImageUrl()).build());
-        return item;
     }
 
     @Override
