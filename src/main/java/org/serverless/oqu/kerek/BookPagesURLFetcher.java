@@ -11,7 +11,6 @@ import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequestEntry;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -22,16 +21,13 @@ import static java.util.Map.Entry.comparingByKey;
 import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
 import static java.util.UUID.randomUUID;
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
-import static org.apache.commons.io.FilenameUtils.getExtension;
-import static org.apache.commons.io.FilenameUtils.getName;
-import static org.apache.commons.io.FilenameUtils.removeExtension;
+import static java.util.stream.Collectors.*;
+import static org.apache.commons.io.FilenameUtils.*;
+import static org.serverless.oqu.kerek.util.EnvironmentUtils.getBooksBucketName;
+import static org.serverless.oqu.kerek.util.EnvironmentUtils.getQueueName;
 import static org.serverless.oqu.kerek.util.HtmlParseUtils.parseBookPagesUrls;
 import static org.serverless.oqu.kerek.util.URLUtils.extractQueryParamValue;
 import static software.amazon.awssdk.utils.StringUtils.isBlank;
-import static software.amazon.awssdk.utils.StringUtils.isNotBlank;
 
 public class BookPagesURLFetcher extends SqsEventHandler {
 
@@ -45,11 +41,8 @@ public class BookPagesURLFetcher extends SqsEventHandler {
         try {
             log(context, "Starting processing SQS message (ID = %s)", input.getMessageId());
             final var bookId = extractQueryParamValue(input.getBody(), "brId");
-            final var bucketName = System.getenv("BOOKS_BUCKET_NAME");
-            final var initiatorEmail = getMessageAttributeOrDefault(input, "initiator.email", null);
-            final var initiatorName = getMessageAttributeOrDefault(input, "initiator.name", null);
 
-            if (bookExists(bucketName, bookId)) {
+            if (bookExists(getBooksBucketName(), bookId)) {
                 log(context, "Book with ID %s has already been loaded", bookId);
                 return null;
             }
@@ -58,7 +51,7 @@ public class BookPagesURLFetcher extends SqsEventHandler {
 
             if (pages.isEmpty()) throw new ClientException(404, "Pages URLs have not been found on the given URL");
 
-            sendMessagesToSqs(pages, bookId, initiatorEmail, initiatorName);
+            sendMessagesToSqs(pages, bookId);
             log(context, "Completed processing SQS message (ID = %s)", input.getMessageId());
         } catch (Exception e) {
             log(context, "Error occurred while processing request SQS message (ID = %s): %s", input.getMessageId(), e.getMessage());
@@ -66,8 +59,8 @@ public class BookPagesURLFetcher extends SqsEventHandler {
         return null;
     }
 
-    private void sendMessagesToSqs(final List<String> pages, final String bookId, final String email, final String name) {
-        final var queueUrl = System.getenv("QUEUE_NAME");
+    private void sendMessagesToSqs(final List<String> pages, final String bookId) {
+        final var queueUrl = getQueueName();
         final var pagesWithoutLastOne = pages.subList(0, pages.size() - 1);
         final var lastPage = pages.get(pages.size() - 1);
         final var chuckedPages = chuckList(pagesWithoutLastOne, SQS_BATCH_REQUEST_LIMIT);
@@ -87,35 +80,31 @@ public class BookPagesURLFetcher extends SqsEventHandler {
         sqs.sendMessageBatch(
                 SendMessageBatchRequest.builder()
                         .queueUrl(queueUrl)
-                        .entries(List.of(requireNonNull(buildSendMessageRequest(lastPage, bookId, "last", email, name))))
+                        .entries(List.of(requireNonNull(buildSendMessageRequest(lastPage, bookId, "last"))))
                         .build()
         );
     }
 
     private SendMessageBatchRequestEntry buildSendMessageRequest(final String pageUrl, final String bookId) {
-        return buildSendMessageRequest(pageUrl, bookId, null, null, null);
+        return buildSendMessageRequest(pageUrl, bookId, null);
     }
 
-    private SendMessageBatchRequestEntry buildSendMessageRequest(final String pageUrl, final String bookId, final String filename, final String email, final String name) {
+    private SendMessageBatchRequestEntry buildSendMessageRequest(final String pageUrl, final String bookId, final String filename) {
         try {
             final var url = new URL("https://kazneb.kz" + pageUrl.replace("&amp;", "&"));
             final var filenameWithoutExtension = isBlank(filename) ? removeExtension(getName(url.getPath())) : filename;
             final var extension = getExtension(url.getPath());
-            final var attributes = new HashMap<String, String>();
-            attributes.put("filepath", format("%s/%s.%s", bookId, filenameWithoutExtension, extension));
-            attributes.put("content-type", format("image/%s", extension));
-            if (isNotBlank(email)) attributes.put("initiator.email", email);
-            if (isNotBlank(name)) attributes.put("initiator.name", name);
 
-            final var messageAttributes = attributes.entrySet()
+            final var messageAttributes = Map.of(
+                            "filepath", format("%s/%s.%s", bookId, filenameWithoutExtension, extension),
+                            "content-type", format("image/%s", extension)
+                    )
+                    .entrySet()
                     .stream()
                     .filter(e -> nonNull(e.getValue()))
                     .collect(toMap(
                             Map.Entry::getKey,
-                            e -> MessageAttributeValue.builder()
-                                    .dataType(String.class.getSimpleName())
-                                    .stringValue(e.getValue())
-                                    .build()
+                            e -> stringMessageAttribute(e.getValue())
                     ));
             return SendMessageBatchRequestEntry.builder()
                     .id(randomUUID().toString())
@@ -144,6 +133,13 @@ public class BookPagesURLFetcher extends SqsEventHandler {
                 .stream()
                 .map(S3Object::key)
                 .anyMatch(key -> key.endsWith(".pdf"));
+    }
+
+    private MessageAttributeValue stringMessageAttribute(final String value) {
+        return MessageAttributeValue.builder()
+                .dataType(String.class.getSimpleName())
+                .stringValue(value)
+                .build();
     }
 
     private static final Integer SQS_BATCH_REQUEST_LIMIT = 10;

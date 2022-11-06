@@ -6,12 +6,11 @@ import org.serverless.template.SqsEventHandler;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.net.URL;
-import java.util.HashMap;
 import java.util.Map;
 
+import static java.util.Collections.emptyMap;
 import static org.apache.commons.io.IOUtils.toByteArray;
-import static org.serverless.oqu.kerek.Constants.S3_OBJECT_INITIATOR_EMAIL_ATTR;
-import static org.serverless.oqu.kerek.Constants.S3_OBJECT_INITIATOR_NAME_ATTR;
+import static org.serverless.oqu.kerek.util.EnvironmentUtils.getBooksBucketName;
 import static software.amazon.awssdk.core.sync.RequestBody.fromBytes;
 import static software.amazon.awssdk.utils.StringUtils.isBlank;
 
@@ -25,17 +24,14 @@ public class BookPagesLoader extends SqsEventHandler {
     protected Void doHandleRequest(final SQSEvent.SQSMessage input, final Context context) {
        try {
            log(context, "Starting processing SQS message (ID = %s)", input.getMessageId());
-           final var bucketName = System.getenv("BUCKET_NAME");
            final var filepath = getMessageAttributeOrDefault(input, "filepath", "");
            final var contentType = getMessageAttributeOrDefault(input, "content-type", null);
-           final var initiatorEmail = getMessageAttributeOrDefault(input, "initiator.email", null);
-           final var initiatorName = getMessageAttributeOrDefault(input, "initiator.name", null);
 
            try (final var bookPageImage = new URL(input.getBody()).openStream()) {
                final var request = PutObjectRequest.builder()
-                       .bucket(bucketName)
+                       .bucket(getBooksBucketName())
                        .key(filepath)
-                       .metadata(buildObjectMetadata(contentType, initiatorEmail, initiatorName))
+                       .metadata(buildObjectMetadata(contentType))
                        .build();
 
                s3Client.putObject(request, fromBytes(toByteArray(bookPageImage)));
@@ -47,11 +43,8 @@ public class BookPagesLoader extends SqsEventHandler {
         return null;
     }
 
-    private Map<String, String> buildObjectMetadata(final String contentType, final String email, final String name) {
-        final var metadata = new HashMap<String, String>();
-        if (!isBlank(contentType)) metadata.put("Content-Type", contentType);
-        if (!isBlank(email)) metadata.put(S3_OBJECT_INITIATOR_EMAIL_ATTR, email);
-        if (!isBlank(name)) metadata.put(S3_OBJECT_INITIATOR_NAME_ATTR, name);
-        return metadata;
+    private Map<String, String> buildObjectMetadata(final String contentType) {
+        if (!isBlank(contentType)) return Map.of("Content-Type", contentType);
+        return emptyMap();
     }
 }
