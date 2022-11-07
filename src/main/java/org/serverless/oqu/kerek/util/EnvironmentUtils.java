@@ -12,6 +12,10 @@ public class EnvironmentUtils {
         return System.getenv("TABLE_NAME");
     }
 
+    public static String getTableIndexName() {
+        return System.getenv("TABLE_INDEX_NAME");
+    }
+
     public static String getBooksBucketName() {
         return System.getenv("BOOKS_BUCKET_NAME");
     }
