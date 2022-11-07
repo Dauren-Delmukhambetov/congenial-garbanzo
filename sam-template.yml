@@ -171,6 +171,30 @@ Resources:
 
   # ---- Functions ----
 
+  UserHistoryAccessorFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Runtime: java11
+      Handler: org.serverless.oqu.kerek.UserHistoryAccessor::handleRequest
+      MemorySize: 1024
+      Timeout: 300
+      CodeUri: build/distributions/oqu-kerek-app-0.1.0.zip
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref BooksTable
+          TABLE_INDEX_NAME: !Sub "${BooksTable}-gsi"
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref BooksTable
+      Events:
+        BookInfoFetcherApiEvent:
+          Type: Api
+          Properties:
+            Path: /books
+            Method: get
+            RestApiId:
+              Ref: BookParserApi
+
   BookInfoFetcherFunction:
     Type: 'AWS::Serverless::Function'
     Properties:
