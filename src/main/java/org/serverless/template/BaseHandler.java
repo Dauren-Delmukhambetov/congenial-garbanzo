@@ -2,6 +2,7 @@ package org.serverless.template;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import org.serverless.oqu.kerek.repo.BookMapper;
 import org.serverless.oqu.kerek.repo.BookRepository;
 import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
@@ -69,8 +70,7 @@ public abstract class BaseHandler<T, R, I, O> implements RequestHandler<I, O> {
         if (bookRepository != null) return;
         if (dynamoDbClient == null) initDynamoDbClient();
         final var start = System.currentTimeMillis();
-        bookRepository = new BookRepository(dynamoDbClient);
+        bookRepository = new BookRepository(dynamoDbClient, new BookMapper());
         System.out.printf("initSqsClient took %d milliseconds to complete %n", System.currentTimeMillis() - start);
-
     }
 }

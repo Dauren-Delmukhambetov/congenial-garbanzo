@@ -10,6 +10,7 @@ import java.time.OffsetDateTime;
 @Value
 @RequiredArgsConstructor
 public class BookRequestContext {
+    String bookId;
     String userEmail;
     OffsetDateTime requestedAt;
 }

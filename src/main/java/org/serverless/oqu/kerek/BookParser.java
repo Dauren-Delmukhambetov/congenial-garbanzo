@@ -42,6 +42,7 @@ public class BookParser extends ApiGatewayEventHandler<BookParser.BookParsingReq
 
     private void saveBookInfoInDb(final BookInfo bookInfo) {
         final var requestContext = BookRequestContext.builder()
+                .bookId(bookInfo.getId())
                 .userEmail(email())
                 .requestedAt(OffsetDateTime.now())
                 .build();

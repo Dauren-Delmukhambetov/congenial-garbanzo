@@ -10,43 +10,27 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import static java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME;
 import static java.util.stream.Collectors.toList;
+import static org.serverless.oqu.kerek.repo.BookMapper.BOOK_ID;
+import static org.serverless.oqu.kerek.repo.BookMapper.USER_EMAIL;
 import static org.serverless.oqu.kerek.util.EnvironmentUtils.getTableIndexName;
 import static org.serverless.oqu.kerek.util.EnvironmentUtils.getTableName;
 
 @RequiredArgsConstructor
 public class BookRepository {
     private final DynamoDbClient dynamoDbClient;
+    private final BookMapper mapper;
 
     public void save(BookInfo book, BookRequestContext context) {
         final var putBookRequest = WriteRequest.builder()
-                .putRequest(pr -> pr.item(buildBookItem(book)))
+                .putRequest(pr -> pr.item(mapper.mapToBookItem(book)))
                 .build();
         final var putUserRequest = WriteRequest.builder()
-                .putRequest(pr -> pr.item(buildUserItem(book, context)))
+                .putRequest(pr -> pr.item(mapper.mapToUserItem(context)))
                 .build();
         final var requestItems = Map.of(getTableName(), List.of(putBookRequest, putUserRequest));
 
         dynamoDbClient.batchWriteItem(br -> br.requestItems(requestItems));
-    }
-
-    private Map<String, AttributeValue> buildBookItem(BookInfo bookInfo) {
-        return Map.of(
-                "BookID", stringAttribute(bookInfo.getId()),
-                "UserEmail", stringAttribute(bookInfo.getId()),
-                "Title", stringAttribute(bookInfo.getTitle()),
-                "Author", stringAttribute(bookInfo.getAuthor()),
-                "ImageUrl", stringAttribute(bookInfo.getImageUrl())
-        );
-    }
-
-    private Map<String, AttributeValue> buildUserItem(BookInfo bookInfo, BookRequestContext context) {
-        return Map.of(
-                "BookID", stringAttribute(bookInfo.getId()),
-                "UserEmail", stringAttribute(context.getUserEmail()),
-                "RequestedAt", stringAttribute(context.getRequestedAt().format(ISO_OFFSET_DATE_TIME))
-        );
     }
 
     private AttributeValue stringAttribute(String value) {
@@ -56,7 +40,7 @@ public class BookRepository {
     public List<BookInfo> findByBookIds(final Collection<String> bookIds) {
         final var keysAndAttributes = KeysAndAttributes.builder()
                 .keys(bookIds.stream()
-                        .map(id -> Map.of("BookID", stringAttribute(id), "UserEmail", stringAttribute(id)))
+                        .map(id -> Map.of(BOOK_ID, stringAttribute(id), USER_EMAIL, stringAttribute(id)))
                         .collect(toList())
                 )
                 .build();
@@ -69,12 +53,7 @@ public class BookRepository {
                 .responses()
                 .get(getTableName())
                 .stream()
-                .map(attrs -> BookInfo.builder()
-                        .id(attrs.get("BookID").s())
-                        .title(attrs.get("Title").s())
-                        .author(attrs.get("Author").s())
-                        .imageUrl(attrs.get("ImageUrl").s())
-                        .build())
+                .map(mapper::mapToBook)
                 .collect(toList());
     }
 
@@ -82,16 +61,18 @@ public class BookRepository {
         final var queryRequest = QueryRequest.builder()
                 .tableName(getTableName())
                 .indexName(getTableIndexName())
-                .keyConditionExpression("userEmail = :email")
-                .expressionAttributeNames(Map.of("userEmail", "UserEmail"))
-                .expressionAttributeValues(Map.of("email", stringAttribute(userEmail)))
+                .keyConditionExpression("#userEmail = :email")
+                .expressionAttributeNames(Map.of("#userEmail", USER_EMAIL))
+                .expressionAttributeValues(Map.of(":email", stringAttribute(userEmail)))
+                .scanIndexForward(false)
+                .limit(5)
                 .build();
 
         return dynamoDbClient.query(queryRequest)
                 .items()
                 .stream()
-                .filter(item -> item.containsKey("BookID"))
-                .map(item -> item.get("BookID"))
+                .filter(item -> item.containsKey(BOOK_ID))
+                .map(item -> item.get(BOOK_ID))
                 .map(AttributeValue::s)
                 .distinct()
                 .collect(toList());
