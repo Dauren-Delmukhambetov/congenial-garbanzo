@@ -123,23 +123,23 @@ Resources:
           AttributeName: "UserEmail"
           KeyType: "RANGE"
 
-      GlobalSecondaryIndexes:
-        -
-          IndexName: !Sub "${AWS::StackName}-books-table-gsi"
-          KeySchema:
-            -
-              AttributeName: "UserEmail"
-              KeyType: "HASH"
-            -
-              AttributeName: "RequestedAt"
-              KeyType: "RANGE"
-          Projection:
-            NonKeyAttributes:
-              - "BookID"
-            ProjectionType: "INCLUDE"
-          ProvisionedThroughput:
-            ReadCapacityUnits: "3"
-            WriteCapacityUnits: "3"
+#      GlobalSecondaryIndexes:
+#        -
+#          IndexName: !Sub "${AWS::StackName}-books-table-gsi"
+#          KeySchema:
+#            -
+#              AttributeName: "UserEmail"
+#              KeyType: "HASH"
+#            -
+#              AttributeName: "RequestedAt"
+#              KeyType: "RANGE"
+#          Projection:
+#            NonKeyAttributes:
+#              - "BookID"
+#            ProjectionType: "INCLUDE"
+#          ProvisionedThroughput:
+#            ReadCapacityUnits: "3"
+#            WriteCapacityUnits: "3"
 
       ProvisionedThroughput:
         ReadCapacityUnits: "3"
