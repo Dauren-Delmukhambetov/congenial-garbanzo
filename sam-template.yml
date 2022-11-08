@@ -112,6 +112,9 @@ Resources:
         -
           AttributeName: "UserEmail"
           AttributeType: "S"
+        -
+          AttributeName: "RequestedAt"
+          AttributeType: "S"
       KeySchema:
         -
           AttributeName: "BookID"
