@@ -33,7 +33,8 @@ public class UserHistoryAccessor extends ApiGatewayEventHandler<String, List<Boo
             return bookRepository.findByBookIds(bookIds);
 
         } catch (Exception e) {
-            log(context, "Error occurred while books history for the user with email %s", email(), e.getMessage());
+            e.printStackTrace();
+            log(context, "Error occurred while books history for the user with email %s: %s", email(), e.getMessage());
         }
         return emptyList();
     }

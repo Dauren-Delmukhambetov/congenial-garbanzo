@@ -127,6 +127,9 @@ Resources:
             -
               AttributeName: "UserEmail"
               KeyType: "HASH"
+            -
+              AttributeName: "RequestedAt"
+              KeyType: "RANGE"
           Projection:
             NonKeyAttributes:
               - "BookID"
