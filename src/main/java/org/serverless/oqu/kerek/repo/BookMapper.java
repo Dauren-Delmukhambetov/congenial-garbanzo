@@ -79,6 +79,6 @@ public class BookMapper {
     private final Map<String, Function<BookRequestContext, String>> userGetters = ImmutableMap.of(
             BOOK_ID, BookRequestContext::getBookId,
             USER_EMAIL, BookRequestContext::getUserEmail,
-            REQUESTED_AT, (request) -> request.getRequestedAt().format(ISO_OFFSET_DATE_TIME)
+            REQUESTED_AT, request -> request.getRequestedAt().format(ISO_OFFSET_DATE_TIME)
     );
 }
