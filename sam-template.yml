@@ -341,10 +341,13 @@ Resources:
       Environment:
         Variables:
           BOOKS_BUCKET_NAME: !Sub "${AWS::StackName}-books"
+          TABLE_NAME: !Ref BooksTable
       Policies:
         # Policy that allows Lambda function to read, write, and delete objects in an Amazon S3 bucket
         - S3CrudPolicy:
             BucketName: !Sub "${AWS::StackName}-books"
+        - DynamoDBReadPolicy:
+            TableName: !Ref BooksTable
       Events:
         PdfDocumentUploadedS3Event:
           Type: S3

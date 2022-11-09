@@ -69,7 +69,7 @@ public class BookMapper {
             TITLE, BookInfo::getTitle,
             AUTHOR, BookInfo::getAuthor,
             IMAGE_URL, BookInfo::getImageUrl,
-            STATUS, book -> Optional.of(book.getStatus()).orElse("InProgress")
+            STATUS, book -> Optional.ofNullable(book.getStatus()).orElse("InProgress")
     );
 
     private final Map<String, BiConsumer<BookInfo.BookInfoBuilder, String>> bookSetters = ImmutableMap.of(
