@@ -12,7 +12,6 @@ import java.time.Duration;
 
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
-import static org.serverless.oqu.kerek.util.EnvironmentUtils.getBooksBucketName;
 import static org.serverless.oqu.kerek.util.HtmlParseUtils.parseBookInfo;
 
 public class BookInfoFetcher extends ApiGatewayEventHandler<String, BookInfo> {
@@ -35,16 +34,14 @@ public class BookInfoFetcher extends ApiGatewayEventHandler<String, BookInfo> {
     protected BookInfo doHandleRequest(final String input, final Context context) {
         try {
             log(context, "Starting fetch info for book (ID = %s)", input);
-            final var bucketName = getBooksBucketName();
-            final var url = bookExists(bucketName, input) ? buildPresignedUrlToPdfFile(bucketName, input) : null;
+            // final var bucketName = getBooksBucketName();
+            // final var url = Optional.ofNullable(bookExists(bucketName, input) ? buildPresignedUrlToPdfFile(bucketName, input) : null);
             final var bookShortInfo = requireNonNull(parseBookInfo(format("https://kazneb.kz/ru/catalogue/view/%s", input)));
 
             return BookInfo.builder()
                     .id(input)
                     .title(bookShortInfo.getTitle())
                     .author(bookShortInfo.getAuthor())
-                    .imageUrl(bookShortInfo.getImageUrl())
-                    .linkToDownload(url)
                     .build();
         } catch (Exception e) {
             log(context, "Error occurred while fetching info for book (Object Key = %s): %s", input, e.getMessage());

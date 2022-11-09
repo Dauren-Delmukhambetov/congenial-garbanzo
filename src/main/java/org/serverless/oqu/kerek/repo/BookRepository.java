@@ -3,16 +3,18 @@ package org.serverless.oqu.kerek.repo;
 import lombok.RequiredArgsConstructor;
 import org.serverless.oqu.kerek.model.BookInfo;
 import org.serverless.oqu.kerek.model.BookRequestContext;
+import org.serverless.oqu.kerek.util.DynamoDbUtils;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import static java.util.Comparator.comparing;
+import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
-import static org.serverless.oqu.kerek.repo.BookMapper.BOOK_ID;
-import static org.serverless.oqu.kerek.repo.BookMapper.USER_EMAIL;
+import static org.serverless.oqu.kerek.repo.BookMapper.*;
+import static org.serverless.oqu.kerek.util.DynamoDbUtils.*;
 import static org.serverless.oqu.kerek.util.EnvironmentUtils.getTableIndexName;
 import static org.serverless.oqu.kerek.util.EnvironmentUtils.getTableName;
 
@@ -33,11 +35,18 @@ public class BookRepository {
         dynamoDbClient.batchWriteItem(br -> br.requestItems(requestItems));
     }
 
-    private AttributeValue stringAttribute(String value) {
-        return AttributeValue.builder().s(value).build();
+    public void updateBookStatus(final String bookId, final String status) {
+        final var primaryKey = primaryKey(BOOK_ID, USER_EMAIL, bookId);
+        final var updatedValues = Map.of(STATUS, updateAttribute(status));
+
+        dynamoDbClient.updateItem(
+                br -> br.tableName(getTableName())
+                        .key(primaryKey)
+                        .attributeUpdates(updatedValues)
+        );
     }
 
-    public List<BookInfo> findByBookIds(final Collection<String> bookIds) {
+    public List<BookInfo> findByBookIds(final List<String> bookIds) {
         final var keysAndAttributes = KeysAndAttributes.builder()
                 .keys(bookIds.stream()
                         .map(id -> Map.of(BOOK_ID, stringAttribute(id), USER_EMAIL, stringAttribute(id)))
@@ -54,6 +63,7 @@ public class BookRepository {
                 .get(getTableName())
                 .stream()
                 .map(mapper::mapToBook)
+                .sorted(comparing(BookInfo::getId, comparingInt(bookIds::indexOf)))
                 .collect(toList());
     }
 
