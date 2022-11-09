@@ -6,6 +6,7 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.utils.ImmutableMap;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -22,6 +23,7 @@ public class BookMapper {
     public static final String AUTHOR = "Author";
     public static final String IMAGE_URL = "ImageUrl";
     public static final String REQUESTED_AT = "RequestedAt";
+    public static final String STATUS = "Status";
 
     public Map<String, AttributeValue> mapToBookItem(final BookInfo bookInfo) {
         return bookGetters.entrySet()
@@ -61,19 +63,21 @@ public class BookMapper {
         return AttributeValue.builder().s(value).build();
     }
 
-    private final Map<String, Function<BookInfo, String>> bookGetters = ImmutableMap.of(
+    private final Map<String, Function<BookInfo, String>> bookGetters = Map.of(
             BOOK_ID, BookInfo::getId,
             USER_EMAIL, BookInfo::getId,
             TITLE, BookInfo::getTitle,
             AUTHOR, BookInfo::getAuthor,
-            IMAGE_URL, BookInfo::getImageUrl
+            IMAGE_URL, BookInfo::getImageUrl,
+            STATUS, book -> Optional.of(book.getStatus()).orElse("InProgress")
     );
 
     private final Map<String, BiConsumer<BookInfo.BookInfoBuilder, String>> bookSetters = ImmutableMap.of(
             BOOK_ID, BookInfo.BookInfoBuilder::id,
             TITLE, BookInfo.BookInfoBuilder::title,
             AUTHOR, BookInfo.BookInfoBuilder::author,
-            IMAGE_URL, BookInfo.BookInfoBuilder::imageUrl
+            IMAGE_URL, BookInfo.BookInfoBuilder::imageUrl,
+            STATUS, BookInfo.BookInfoBuilder::status
     );
 
     private final Map<String, Function<BookRequestContext, String>> userGetters = ImmutableMap.of(

@@ -14,6 +14,7 @@ public class BookPagesWiper extends S3EventHandler {
 
     static {
         initS3Client();
+        initBookRepository();
     }
 
     @Override
@@ -22,9 +23,11 @@ public class BookPagesWiper extends S3EventHandler {
             log(context, "Starting processing S3 Event notification record (Object Key = %s)", input.getS3().getObject().getKey());
 
             final var bucketName = getBooksBucketName();
-            final var directory = input.getS3().getObject().getKey().split("/")[0];
+            final var bookId = input.getS3().getObject().getKey().split("/")[0];
 
-            final var imageKeys = s3Client.listObjectsV2(b -> b.bucket(bucketName).prefix(directory))
+            bookRepository.updateBookStatus(bookId, "Ready");
+
+            final var imageKeys = s3Client.listObjectsV2(b -> b.bucket(bucketName).prefix(bookId))
                     .contents()
                     .stream()
                     .map(S3Object::key)

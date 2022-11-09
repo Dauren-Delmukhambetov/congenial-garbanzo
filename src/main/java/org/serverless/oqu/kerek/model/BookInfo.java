@@ -14,5 +14,5 @@ public class BookInfo {
     private final String title;
     private final String author;
     private final String imageUrl;
-    private final URL linkToDownload;
+    private final String status;
 }
