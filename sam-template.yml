@@ -346,7 +346,7 @@ Resources:
         # Policy that allows Lambda function to read, write, and delete objects in an Amazon S3 bucket
         - S3CrudPolicy:
             BucketName: !Sub "${AWS::StackName}-books"
-        - DynamoDBReadPolicy:
+        - DynamoDBCrudPolicy:
             TableName: !Ref BooksTable
       Events:
         PdfDocumentUploadedS3Event:
