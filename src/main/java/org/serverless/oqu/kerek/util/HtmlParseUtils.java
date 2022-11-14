@@ -8,16 +8,17 @@ import org.serverless.oqu.kerek.model.BookShortInfo;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
-import java.util.StringTokenizer;
+import java.util.*;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
+import static java.util.Optional.ofNullable;
+import static java.util.function.Predicate.not;
 import static software.amazon.awssdk.utils.StringUtils.isBlank;
 
 
@@ -52,23 +53,35 @@ public final class HtmlParseUtils {
         return pages.stream().filter(Objects::nonNull).collect(Collectors.toList());
     }
 
-    public static BookShortInfo parseBookInfo(final String url) {
+    public static Optional<BookShortInfo> parseBookInfo(final String url) {
         Document bookPage;
         try {
             bookPage = Jsoup.parse(new URL(url), 30_000);
         } catch (IOException e) {
             System.err.printf("Error occurred while trying to parse URL %s : %s%n", url, e.getMessage());
-            return null;
+            return Optional.empty();
         }
 
-        final var title = requireNonNull(bookPage.select(".arrival-title").first()).text();
-        final var author = requireNonNull(bookPage.select(".arrival-info-author").first()).text();
-        final var imageUrl = "https://kazneb.kz" + requireNonNull(bookPage.select(".viewing-pic img[src]").first()).attributes().get("src");
+        final var title = ofNullable(bookPage.select(".arrival-title").first())
+                .map(Element::text)
+                .filter(not(String::isBlank))
+                .orElse(null);
+        final var author = ofNullable(bookPage.select(".arrival-info-author").first())
+                .map(Element::text)
+                .filter(not(String::isBlank))
+                .orElse(null);
+        final var imageUrl =  ofNullable(bookPage.select(".viewing-pic img[src]").first())
+                .map(Element::attributes)
+                .map(a -> a.get("src"))
+                .filter(not(String::isBlank))
+                .map(path -> format("https://kazneb.kz%s", path))
+                .orElse(null);
 
-        return new BookShortInfo(
-                isBlank(title) ? null : title,
-                isBlank(author) ? null : author,
-                isBlank(imageUrl) ? null : imageUrl
+        return Optional.of(BookShortInfo.builder()
+                .title(title)
+                .author(author)
+                .imageUrl(imageUrl)
+                .build()
         );
     }
 

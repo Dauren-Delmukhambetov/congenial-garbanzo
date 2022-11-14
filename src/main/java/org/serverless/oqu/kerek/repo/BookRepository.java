@@ -3,12 +3,12 @@ package org.serverless.oqu.kerek.repo;
 import lombok.RequiredArgsConstructor;
 import org.serverless.oqu.kerek.model.BookInfo;
 import org.serverless.oqu.kerek.model.BookRequestContext;
-import org.serverless.oqu.kerek.util.DynamoDbUtils;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static java.util.Comparator.comparing;
 import static java.util.Comparator.comparingInt;
@@ -23,7 +23,7 @@ public class BookRepository {
     private final DynamoDbClient dynamoDbClient;
     private final BookMapper mapper;
 
-    public void save(BookInfo book, BookRequestContext context) {
+    public void saveNewBook(BookInfo book, BookRequestContext context) {
         final var putBookRequest = WriteRequest.builder()
                 .putRequest(pr -> pr.item(mapper.mapToBookItem(book)))
                 .build();
@@ -35,6 +35,10 @@ public class BookRepository {
         dynamoDbClient.batchWriteItem(br -> br.requestItems(requestItems));
     }
 
+    public void saveNewRequest(BookRequestContext context) {
+        dynamoDbClient.putItem(br -> br.item(mapper.mapToUserItem(context)));
+    }
+
     public void updateBookStatus(final String bookId, final String status) {
         final var primaryKey = primaryKey(BOOK_ID, USER_EMAIL, bookId);
         final var updatedValues = Map.of(STATUS, updateAttribute(status));
@@ -44,6 +48,12 @@ public class BookRepository {
                         .key(primaryKey)
                         .attributeUpdates(updatedValues)
         );
+    }
+
+    public Optional<BookInfo> findByBookId(final String bookId) {
+        return findByBookIds(List.of(bookId))
+                .stream()
+                .findFirst();
     }
 
     public List<BookInfo> findByBookIds(final List<String> bookIds) {
