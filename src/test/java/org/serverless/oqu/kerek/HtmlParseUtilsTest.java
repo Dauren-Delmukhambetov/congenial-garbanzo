@@ -23,9 +23,11 @@ class HtmlParseUtilsTest {
     void shouldParseBookInfo(final String bookId, final String title, final String author) {
         final var bookInfo = parseBookInfo(format("https://kazneb.kz/ru/catalogue/view/%s", bookId));
 
-        assertNotNull(bookInfo);
-        assertNotNull(bookInfo.getImageUrl());
-        assertEquals(title, bookInfo.getTitle());
-        assertEquals(author, bookInfo.getAuthor());
+        assertTrue(bookInfo.isPresent());
+        bookInfo.ifPresent(b -> {
+            assertNotNull(b.getImageUrl());
+            assertEquals(title, b.getTitle());
+            assertEquals(author, b.getAuthor());
+        });
     }
 }
