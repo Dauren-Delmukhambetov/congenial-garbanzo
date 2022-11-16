@@ -36,7 +36,7 @@ public class BookRepository {
     }
 
     public void saveNewRequest(BookRequestContext context) {
-        dynamoDbClient.putItem(br -> br.item(mapper.mapToUserItem(context)));
+        dynamoDbClient.putItem(br -> br.tableName(getTableName()).item(mapper.mapToUserItem(context)));
     }
 
     public void updateBookStatus(final String bookId, final String status) {
