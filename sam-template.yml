@@ -201,11 +201,11 @@ Resources:
             RestApiId:
               Ref: BookParserApi
 
-  BookInfoFetcherFunction:
+  DownloadLinkGeneratorFunction:
     Type: 'AWS::Serverless::Function'
     Properties:
       Runtime: java11
-      Handler: org.serverless.oqu.kerek.BookInfoFetcher::handleRequest
+      Handler: org.serverless.oqu.kerek.DownloadLinkGenerator::handleRequest
       MemorySize: 1024
       Timeout: 300
       CodeUri: build/distributions/oqu-kerek-app-0.1.0.zip
@@ -219,7 +219,7 @@ Resources:
         BookInfoFetcherApiEvent:
           Type: Api
           Properties:
-            Path: /books/{bookId}
+            Path: /books/{bookId}/download-link
             Method: get
             RestApiId:
               Ref: BookParserApi
