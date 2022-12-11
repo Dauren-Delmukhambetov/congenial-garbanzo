@@ -44,6 +44,8 @@ public class BookPagesURLFetcher extends SqsEventHandler {
 
             if (bookExists(getBooksBucketName(), bookId)) {
                 log(context, "Book with ID %s has already been loaded", bookId);
+                initBookRepository();
+                bookRepository.updateBookStatus(bookId, "Ready");
                 return null;
             }
 
