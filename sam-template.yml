@@ -186,6 +186,7 @@ Resources:
       Timeout: 300
       SnapStart:
         ApplyOn: PublishedVersions
+      AutoPublishAlias: live
       CodeUri: build/distributions/oqu-kerek-app-0.1.0.zip
       Environment:
         Variables:
@@ -212,6 +213,7 @@ Resources:
       Timeout: 300
       SnapStart:
         ApplyOn: PublishedVersions
+      AutoPublishAlias: live
       CodeUri: build/distributions/oqu-kerek-app-0.1.0.zip
       Environment:
         Variables:
@@ -237,6 +239,7 @@ Resources:
       Timeout: 300
       SnapStart:
         ApplyOn: PublishedVersions
+      AutoPublishAlias: live
       CodeUri: build/distributions/oqu-kerek-app-0.1.0.zip
       Environment:
         Variables:
