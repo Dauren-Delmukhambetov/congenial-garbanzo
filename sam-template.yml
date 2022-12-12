@@ -184,9 +184,6 @@ Resources:
       Handler: org.serverless.oqu.kerek.UserHistoryAccessor::handleRequest
       MemorySize: 1024
       Timeout: 300
-      SnapStart:
-        ApplyOn: PublishedVersions
-      AutoPublishAlias: live
       CodeUri: build/distributions/oqu-kerek-app-0.1.0.zip
       Environment:
         Variables:
@@ -211,9 +208,6 @@ Resources:
       Handler: org.serverless.oqu.kerek.DownloadLinkGenerator::handleRequest
       MemorySize: 1024
       Timeout: 300
-      SnapStart:
-        ApplyOn: PublishedVersions
-      AutoPublishAlias: live
       CodeUri: build/distributions/oqu-kerek-app-0.1.0.zip
       Environment:
         Variables:
@@ -237,9 +231,6 @@ Resources:
       Handler: org.serverless.oqu.kerek.BookParser::handleRequest
       MemorySize: 1024
       Timeout: 300
-      SnapStart:
-        ApplyOn: PublishedVersions
-      AutoPublishAlias: live
       CodeUri: build/distributions/oqu-kerek-app-0.1.0.zip
       Environment:
         Variables:
