@@ -50,6 +50,8 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
       - uses: aws-actions/setup-sam@v2
+      - name: sam fix https://github.com/aws/aws-sam-cli/issues/4527
+        run: $(dirname $(readlink $(which sam)))/pip install --force-reinstall "cryptography==38.0.4"
       - uses: aws-actions/configure-aws-credentials@v1-node16
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}

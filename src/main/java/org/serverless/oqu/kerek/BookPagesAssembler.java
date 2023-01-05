@@ -5,8 +5,15 @@ import com.amazonaws.services.lambda.runtime.events.models.s3.S3EventNotificatio
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.kernel.pdf.action.PdfAction;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Image;
+import com.itextpdf.layout.element.Link;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Text;
+import com.itextpdf.layout.properties.TextAlignment;
+import com.itextpdf.layout.properties.UnitValue;
+import com.itextpdf.layout.properties.VerticalAlignment;
 import lombok.extern.slf4j.Slf4j;
 import org.serverless.template.S3EventHandler;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
@@ -69,7 +76,24 @@ public class BookPagesAssembler extends S3EventHandler {
                 pageImage.setFixedPosition(i + 1, 0, 0);
                 document.add(pageImage);
             }
+            addLastPage(pdfDocument, document);
         }
+    }
+
+    private void addLastPage(final PdfDocument pdfDocument, final Document document) {
+        final var lastPageSize = pdfDocument.getLastPage().getPageSize();
+        pdfDocument.addNewPage(new PageSize(lastPageSize.getWidth(), lastPageSize.getHeight()));
+
+        final var paragraph = new Paragraph()
+                .setFixedPosition(pdfDocument.getNumberOfPages(), 0, lastPageSize.getHeight() / 2, UnitValue.createPercentValue(100))
+                .setTextAlignment(TextAlignment.CENTER)
+                .setFontSize(24)
+                .setVerticalAlignment(VerticalAlignment.MIDDLE);
+
+        paragraph.add(new Text("This book downloaded from "))
+                .add(new Link("oqukerek.de", PdfAction.createURI("https://oqukerek.de/")).setBold());
+
+        document.add(paragraph);
     }
 
     private void uploadPdfFileToS3(final String bucketName, final String directory, final Path tempFile) throws IOException {
