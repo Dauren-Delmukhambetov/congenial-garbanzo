@@ -213,6 +213,8 @@ Resources:
     Properties:
       Description: "Generates a link to download a file"
       Handler: org.serverless.oqu.kerek.DownloadLinkGenerator::handleRequest
+      SnapStart:
+        ApplyOn: PublishedVersions
       Environment:
         Variables:
           BOOKS_BUCKET_NAME: !Sub "${AWS::StackName}-books"
@@ -233,6 +235,8 @@ Resources:
     Properties:
       Description: "Parses information about the book from kazneb"
       Handler: org.serverless.oqu.kerek.BookParser::handleRequest
+      SnapStart:
+        ApplyOn: PublishedVersions
       Environment:
         Variables:
           QUEUE_NAME: !Ref BookParsingRequestQueue
@@ -260,6 +264,8 @@ Resources:
     Properties:
       Description: "Fetches book page image URLs and sends them to the queue"
       Handler: org.serverless.oqu.kerek.BookPagesURLFetcher::handleRequest
+      SnapStart:
+        ApplyOn: PublishedVersions
       Environment:
         Variables:
           QUEUE_NAME: !Ref BookPagesUrlQueue
@@ -283,6 +289,8 @@ Resources:
     Properties:
       Description: "Loads and save book pages in storage"
       Handler: org.serverless.oqu.kerek.BookPagesLoader::handleRequest
+      SnapStart:
+        ApplyOn: PublishedVersions
       Environment:
         Variables:
           BOOKS_BUCKET_NAME: !Sub "${AWS::StackName}-books"
@@ -302,6 +310,8 @@ Resources:
     Properties:
       Description: "Assembles book pages into a single PDF file"
       Handler: org.serverless.oqu.kerek.BookPagesAssembler::handleRequest
+      SnapStart:
+        ApplyOn: PublishedVersions
       Environment:
         Variables:
           BOOKS_BUCKET_NAME: !Sub "${AWS::StackName}-books"
@@ -326,6 +336,8 @@ Resources:
     Properties:
       Description: "Removes book pages from the storage"
       Handler: org.serverless.oqu.kerek.BookPagesWiper::handleRequest
+      SnapStart:
+        ApplyOn: PublishedVersions
       Environment:
         Variables:
           BOOKS_BUCKET_NAME: !Sub "${AWS::StackName}-books"
