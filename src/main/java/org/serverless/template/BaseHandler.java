@@ -4,7 +4,7 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import org.serverless.oqu.kerek.repo.BookMapper;
 import org.serverless.oqu.kerek.repo.BookRepository;
-import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
@@ -31,7 +31,7 @@ public abstract class BaseHandler<T, R, I, O> implements RequestHandler<I, O> {
         final var start = System.currentTimeMillis();
         s3Client = S3Client.builder()
                 .region(getRegion())
-                .credentialsProvider(EnvironmentVariableCredentialsProvider.create())
+                .credentialsProvider(DefaultCredentialsProvider.create())
                 .build();
         System.out.printf("initS3Client took %d milliseconds to complete %n", System.currentTimeMillis() - start);
     }
@@ -41,7 +41,7 @@ public abstract class BaseHandler<T, R, I, O> implements RequestHandler<I, O> {
         final var start = System.currentTimeMillis();
         s3Presigner = S3Presigner.builder()
                 .region(getRegion())
-                .credentialsProvider(EnvironmentVariableCredentialsProvider.create())
+                .credentialsProvider(DefaultCredentialsProvider.create())
                 .build();
         System.out.printf("initS3Presigner took %d milliseconds to complete %n", System.currentTimeMillis() - start);
     }
@@ -51,7 +51,7 @@ public abstract class BaseHandler<T, R, I, O> implements RequestHandler<I, O> {
         final var start = System.currentTimeMillis();
         sqs = SqsClient.builder()
                 .region(getRegion())
-                .credentialsProvider(EnvironmentVariableCredentialsProvider.create())
+                .credentialsProvider(DefaultCredentialsProvider.create())
                 .build();
         System.out.printf("initSqsClient took %d milliseconds to complete %n", System.currentTimeMillis() - start);
     }
@@ -61,7 +61,7 @@ public abstract class BaseHandler<T, R, I, O> implements RequestHandler<I, O> {
         final var start = System.currentTimeMillis();
         dynamoDbClient = DynamoDbClient.builder()
                 .region(getRegion())
-                .credentialsProvider(EnvironmentVariableCredentialsProvider.create())
+                .credentialsProvider(DefaultCredentialsProvider.create())
                 .build();
         System.out.printf("initS3Client took %d milliseconds to complete %n", System.currentTimeMillis() - start);
     }
