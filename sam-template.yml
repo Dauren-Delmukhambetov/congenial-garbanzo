@@ -209,6 +209,9 @@ Resources:
       MemorySize: 1024
       Timeout: 300
       CodeUri: build/distributions/oqu-kerek-app-0.1.0.zip
+      SnapStart:
+        ApplyOn: PublishedVersions
+      AutoPublishAlias: live
       Environment:
         Variables:
           BOOKS_BUCKET_NAME: !Sub "${AWS::StackName}-books"
