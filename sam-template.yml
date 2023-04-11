@@ -1,13 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::Serverless-2016-10-31'
 
-Globals:
-  Function:
-    AutoPublishAlias: live
-    Runtime: java11
-    MemorySize: 1024
-    Timeout: 300
-
 Parameters:
   GoogleClientID:
     Type: String
@@ -187,11 +180,11 @@ Resources:
   UserHistoryAccessorFunction:
     Type: 'AWS::Serverless::Function'
     Properties:
-      Description: "Returns last five books downloaded by user"
-      CodeUri: build/distributions/oqu-kerek-app-0.1.0.zip
+      Runtime: java11
       Handler: org.serverless.oqu.kerek.UserHistoryAccessor::handleRequest
-      SnapStart:
-        ApplyOn: PublishedVersions
+      MemorySize: 1024
+      Timeout: 300
+      CodeUri: build/distributions/oqu-kerek-app-0.1.0.zip
       Environment:
         Variables:
           TABLE_NAME: !Ref BooksTable
@@ -211,11 +204,14 @@ Resources:
   DownloadLinkGeneratorFunction:
     Type: 'AWS::Serverless::Function'
     Properties:
-      Description: "Generates a link to download a file"
-      CodeUri: build/distributions/oqu-kerek-app-0.1.0.zip
+      Runtime: java11
       Handler: org.serverless.oqu.kerek.DownloadLinkGenerator::handleRequest
+      MemorySize: 1024
+      Timeout: 300
+      CodeUri: build/distributions/oqu-kerek-app-0.1.0.zip
       SnapStart:
         ApplyOn: PublishedVersions
+      AutoPublishAlias: live
       Environment:
         Variables:
           BOOKS_BUCKET_NAME: !Sub "${AWS::StackName}-books"
@@ -234,11 +230,11 @@ Resources:
   BookParserLambdaFunction:
     Type: 'AWS::Serverless::Function'
     Properties:
-      Description: "Parses information about the book from kazneb"
-      CodeUri: build/distributions/oqu-kerek-app-0.1.0.zip
+      Runtime: java11
       Handler: org.serverless.oqu.kerek.BookParser::handleRequest
-      SnapStart:
-        ApplyOn: PublishedVersions
+      MemorySize: 1024
+      Timeout: 300
+      CodeUri: build/distributions/oqu-kerek-app-0.1.0.zip
       Environment:
         Variables:
           QUEUE_NAME: !Ref BookParsingRequestQueue
@@ -264,11 +260,12 @@ Resources:
   BookPagesURLFetcherLambdaFunction:
     Type: 'AWS::Serverless::Function'
     Properties:
-      Description: "Fetches book page image URLs and sends them to the queue"
-      CodeUri: build/distributions/oqu-kerek-app-0.1.0.zip
+      Description: "Function fetches book page image URLs and sends them to the queue"
+      Runtime: java11
       Handler: org.serverless.oqu.kerek.BookPagesURLFetcher::handleRequest
-      SnapStart:
-        ApplyOn: PublishedVersions
+      MemorySize: 1024
+      Timeout: 300
+      CodeUri: build/distributions/oqu-kerek-app-0.1.0.zip
       Environment:
         Variables:
           QUEUE_NAME: !Ref BookPagesUrlQueue
@@ -290,11 +287,11 @@ Resources:
   BookPageLoaderLambdaFunction:
     Type: 'AWS::Serverless::Function'
     Properties:
-      Description: "Loads and save book pages in storage"
-      CodeUri: build/distributions/oqu-kerek-app-0.1.0.zip
+      Runtime: java11
       Handler: org.serverless.oqu.kerek.BookPagesLoader::handleRequest
-      SnapStart:
-        ApplyOn: PublishedVersions
+      MemorySize: 1024
+      Timeout: 300
+      CodeUri: build/distributions/oqu-kerek-app-0.1.0.zip
       Environment:
         Variables:
           BOOKS_BUCKET_NAME: !Sub "${AWS::StackName}-books"
@@ -312,11 +309,11 @@ Resources:
   BookPagesAssemblerLambdaFunction:
     Type: 'AWS::Serverless::Function'
     Properties:
-      Description: "Assembles book pages into a single PDF file"
-      CodeUri: build/distributions/oqu-kerek-app-0.1.0.zip
+      Runtime: java11
       Handler: org.serverless.oqu.kerek.BookPagesAssembler::handleRequest
-      SnapStart:
-        ApplyOn: PublishedVersions
+      MemorySize: 1024
+      Timeout: 300
+      CodeUri: build/distributions/oqu-kerek-app-0.1.0.zip
       Environment:
         Variables:
           BOOKS_BUCKET_NAME: !Sub "${AWS::StackName}-books"
@@ -339,11 +336,11 @@ Resources:
   BookPagesWiperLambdaFunction:
     Type: 'AWS::Serverless::Function'
     Properties:
-      Description: "Removes book pages from the storage"
-      CodeUri: build/distributions/oqu-kerek-app-0.1.0.zip
+      Runtime: java11
       Handler: org.serverless.oqu.kerek.BookPagesWiper::handleRequest
-      SnapStart:
-        ApplyOn: PublishedVersions
+      MemorySize: 1024
+      Timeout: 300
+      CodeUri: build/distributions/oqu-kerek-app-0.1.0.zip
       Environment:
         Variables:
           BOOKS_BUCKET_NAME: !Sub "${AWS::StackName}-books"
