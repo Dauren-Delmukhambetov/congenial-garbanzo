@@ -21,6 +21,10 @@ dependencies {
 
     implementation 'com.amazonaws:aws-lambda-java-core:1.2.2'
     implementation 'com.amazonaws:aws-lambda-java-events:3.11.0'
+    implementation 'com.amazonaws:aws-lambda-java-log4j:1.0.1'
+    implementation 'org.slf4j:jcl-over-slf4j:2.0.7'
+    implementation 'org.slf4j:slf4j-reload4j:2.0.7'
+
     implementation 'com.google.code.gson:gson:2.10.1'
     implementation 'org.jsoup:jsoup:1.16.1'
     implementation 'commons-io:commons-io:2.11.0'
